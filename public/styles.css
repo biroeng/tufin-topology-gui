@@ -3,7 +3,7 @@
   --panel: #0f172a;
   --panel-2: #0b1220;
   --text: #e5eef9;
-  --muted: #9fb3c8;
+  --muted: #1b3755;
   --border: #1f2a44;
   --brand: #46b3ff;
   --accent: #2dd4bf;
@@ -33,6 +33,7 @@ html[data-theme="light"] {
 
 * { box-sizing: border-box; }
 html, body { height: 100%; }
+html { scroll-behavior: smooth; }
 body {
   margin: 0;
   font: 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
@@ -42,7 +43,7 @@ body {
               var(--bg);
 }
 
-/* Header */
+/* Header + Nav */
 .app-header {
   display:flex; align-items:center; justify-content:space-between;
   padding: 14px 20px; border-bottom: 1px solid var(--border); background: var(--panel);
@@ -50,14 +51,25 @@ body {
 }
 .brand { display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:.3px; }
 .brand-icon { fill: var(--brand); }
+
+.main-nav { display: flex; gap: 12px; align-items: center; }
+.nav-link {
+  display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px;
+  border-radius: 10px; border: 1px solid transparent; color: var(--text);
+  text-decoration: none; opacity: .9;
+}
+.nav-link:hover { opacity: 1; background: var(--panel-2); border-color: var(--border); }
+.nav-link.active { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(70,179,255,.2) inset; opacity: 1; }
+
 .header-actions { display:flex; gap:10px; }
 
-/* Main grid */
+/* Layout */
 .app-main { max-width: 1200px; margin: 24px auto; padding: 0 16px; display: grid; gap: 16px; }
 .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow); }
 .panel-form { padding: 16px; }
 .panel-json { padding: 16px; }
 
+/* Form & Buttons */
 .field { display:flex; flex-direction:column; gap:8px; }
 .field input {
   appearance:none; background: var(--panel-2); color: var(--text);
@@ -113,23 +125,7 @@ body {
   border-radius: 12px; padding: 14px; max-height: 380px; overflow: auto;
 }
 
-/* Responsive */
-@media (max-width: 1024px) {
-  .visual-content { grid-template-columns: 1fr; }
-}
-
-.sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0; }
-
-/* Toast */
-.toast {
-  position: fixed; bottom: 16px; right: 16px; padding: 10px 14px;
-  background: var(--panel); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow);
-  color: var(--text); opacity: 0; transform: translateY(8px); transition: opacity .2s, transform .2s; pointer-events: none;
-}
-.toast.show { opacity: 1; transform: translateY(0); }
-/* ... keep your existing CSS from before ... */
-
-/* Approved Networks panel */
+/* Approved Networks */
 .panel-approved { padding: 12px; }
 .approved-bar { display:flex; align-items:center; justify-content:space-between; gap:12px; border-bottom:1px solid var(--border); padding-bottom:10px; }
 .approved-form { display:flex; gap:8px; align-items:center; }
@@ -168,3 +164,16 @@ body {
 .modal-body select, .modal-body input {
   background: var(--panel-2); color: var(--text); border:1px solid var(--border); border-radius: 10px; padding: 10px 12px;
 }
+
+/* Responsive */
+@media (max-width: 1024px) { .visual-content { grid-template-columns: 1fr; } }
+@media (max-width: 720px) {
+  .app-header { flex-wrap: wrap; gap: 8px; }
+  .main-nav { width: 100%; order: 3; justify-content: center; padding-top: 8px; }
+}
+.toast {
+  position: fixed; bottom: 16px; right: 16px; padding: 10px 14px;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow);
+  color: var(--text); opacity: 0; transform: translateY(8px); transition: opacity .2s, transform .2s; pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateY(0); }

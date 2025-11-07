@@ -1,111 +1,257 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Tags & Network Mapping</title>
-  <link rel="stylesheet" href="styles.css"/>
+  <meta charset="utf-8" />
+  <title>Tags & Network Mapping (Ant Design)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Ant Design CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5/dist/reset.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5/dist/antd.min.css" />
+
+  <!-- React + ReactDOM + Babel -->
+  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.26.4/babel.min.js"></script>
+
+  <!-- Day.js + plugins -->
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/advancedFormat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/customParseFormat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/localeData.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/weekOfYear.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/weekYear.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/quarterOfYear.js"></script>
+  <script>
+    dayjs.extend(dayjs_plugin_advancedFormat);
+    dayjs.extend(dayjs_plugin_customParseFormat);
+    dayjs.extend(dayjs_plugin_localeData);
+    dayjs.extend(dayjs_plugin_weekOfYear);
+    dayjs.extend(dayjs_plugin_weekYear);
+    dayjs.extend(dayjs_plugin_quarterOfYear);
+  </script>
+
+  <!-- Ant Design UMD -->
+  <script src="https://cdn.jsdelivr.net/npm/antd@5/dist/antd.min.js"></script>
+
   <style>
-    .page-head { display:flex; align-items:center; justify-content:space-between; gap:12px; }
-    .page-actions { display:flex; gap:8px; flex-wrap:wrap; }
-    .grid-3 { display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-    .toolbar { display:flex; align-items:center; justify-content:space-between; padding:10px 0; }
-    .pill { display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid var(--border); font-size:12px; }
-    .table td .pill { margin-right:6px; }
-    .importer { display:none; }
-    .link { color: var(--brand); text-decoration: underline; cursor:pointer; }
+    html, body, #root { height: 100%; margin: 0; }
+    .pill { display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid #d9d9d9; font-size:12px; margin-right:6px; }
+    .toolbar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .import-input { display:none; }
   </style>
 </head>
+
 <body>
-  <header class="app-header">
-    <div class="brand">
-      <svg width="24" height="24" viewBox="0 0 24 24" class="brand-icon" aria-hidden="true"><circle cx="12" cy="12" r="10"/></svg>
-      <span>Tags & Network Mapping</span>
-    </div>
+  <div id="root"></div>
 
-    <nav class="main-nav" aria-label="Primary">
-      <a class="nav-link" href="/" data-route="/">Topology</a>
-      <a class="nav-link" href="/tags" data-route="/tags">Tags & Mapping</a>
-    </nav>
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+    const {
+      ConfigProvider, theme, Layout, Menu, Space, Typography, Form, Input, Button, Card,
+      Row, Col, message, Table, Popconfirm, Switch
+    } = antd;
 
-    <div class="header-actions">
-      <button id="themeToggle" class="btn ghost" title="Toggle theme">🌙</button>
-    </div>
-  </header>
+    const { Header, Content, Footer } = Layout;
+    const { Text } = Typography;
 
-  <main class="app-main">
-    <section class="panel panel-form">
-      <div class="page-head">
-        <h2 style="margin:0">Add Mapping</h2>
-        <div class="page-actions">
-          <button class="btn ghost" id="exportBtn">Export JSON</button>
-          <label class="btn ghost" for="importFile">Import JSON</label>
-          <input id="importFile" class="importer" type="file" accept="application/json"/>
-        </div>
-      </div>
+    /* Header */
+    function HeaderNav({ currentPath, onToggleTheme, isDark }) {
+      const selectedKey = currentPath === '/tags' ? 'tags' : 'topology';
+      return (
+        <Header style={{ position:'sticky', top:0, zIndex:1000, display:'flex', alignItems:'center' }}>
+          <div style={{ color:'#1677ff', fontWeight:700, marginRight:16 }}>Tufin</div>
+          <Menu
+            theme="dark"
+            mode="horizontal"
+            selectedKeys={[selectedKey]}
+            items={[
+              { key:'topology', label:<a href="/">Topology</a> },
+              { key:'tags', label:<a href="/tags">Tags & Mapping</a> },
+            ]}
+            style={{ flex:1 }}
+          />
+          <Space>
+            <Text style={{ color:'#fff' }}>Dark</Text>
+            <Switch checked={isDark} onChange={onToggleTheme}/>
+          </Space>
+        </Header>
+      );
+    }
 
-      <form id="mapForm" class="grid-3" autocomplete="off">
-        <div class="field">
-          <label for="cidr">Network (CIDR or IP)</label>
-          <input id="cidr" placeholder="10.0.0.0/24 or 10.0.0.5" required />
-        </div>
-        <div class="field">
-          <label for="appName">Application</label>
-          <input id="appName" placeholder="CRM, ERP, Payments, ..." required />
-        </div>
-        <div class="field">
-          <label for="owner">Owner</label>
-          <input id="owner" placeholder="Team/BU, e.g., Finance" />
-        </div>
-        <div class="field">
-          <label for="env">Environment</label>
-          <input id="env" placeholder="Production / Dev / QA / DR" />
-        </div>
-        <div class="field">
-          <label for="notes">Notes</label>
-          <input id="notes" placeholder="Any context or constraints" />
-        </div>
-        <div class="form-actions" style="align-self:end">
-          <button class="btn primary" type="submit">Add</button>
-        </div>
-      </form>
-      <div class="hint" id="formHint"></div>
-    </section>
+    function TagsMappingPage() {
+      const [form] = Form.useForm();
+      const [items, setItems] = useState([]);
+      const [search, setSearch] = useState('');
+      const [loading, setLoading] = useState(false);
 
-    <section class="panel panel-visual" style="padding:16px;">
-      <div class="toolbar">
-        <input id="search" placeholder="Search CIDR, App, Owner, Env" class="field" style="width: 320px; padding:10px; border-radius:10px; border:1px solid var(--border); background:var(--panel-2); color:var(--text);" />
-        <div class="muted" id="countInfo"></div>
-      </div>
+      const load = async ()=>{
+        setLoading(true);
+        try {
+          const data = await fetch('/api/mappings').then(r=>r.json());
+          setItems(data.items || []);
+        } finally { setLoading(false); }
+      };
+      useEffect(()=>{ load(); }, []);
 
-      <div class="table-wrap">
-        <table class="table">
-          <thead>
-            <tr>
-              <th style="width:220px;">Network</th>
-              <th>Applications</th>
-              <th style="width:140px;">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="mapBody">
-            <tr><td colspan="3" class="muted">No mappings yet.</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-  </main>
-
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
-
-  <script>
-    // Active menu state
-    (function setActive() {
-      const here = location.pathname || "/";
-      document.querySelectorAll('.main-nav .nav-link[data-route]').forEach(a => {
-        a.classList.toggle('active', a.getAttribute('data-route') === here);
+      const filtered = items.filter(it=>{
+        const q = search.toLowerCase();
+        if (!q) return true;
+        const inCidr = (it.cidr||'').toLowerCase().includes(q);
+        const inApps = (it.applications||[]).some(a => [a.name, a.owner, a.env, a.notes].filter(Boolean).join(' ').toLowerCase().includes(q));
+        return inCidr || inApps;
       });
-    })();
+
+      const add = async (vals)=>{
+        const payload = {
+          cidr: (vals.cidr||'').trim(),
+          applications: [{
+            name: (vals.appName||'').trim(),
+            owner: (vals.owner||'').trim(),
+            env: (vals.env||'').trim(),
+            notes: (vals.notes||'').trim()
+          }]
+        };
+        try {
+          const r = await fetch('/api/mappings', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+          if (!r.ok) throw new Error();
+          message.success('Mapping added');
+          form.resetFields();
+          await load();
+        } catch { message.error('Failed to add'); }
+      };
+
+      const addApp = async (rec)=>{
+        const name = prompt('Application name:'); if (!name) return;
+        const owner = prompt('Owner (optional):')||'';
+        const env = prompt('Environment (optional):')||'';
+        const notes = prompt('Notes (optional):')||'';
+        const applications = [ ...(rec.applications||[]), { name, owner, env, notes } ];
+        await fetch('/api/mappings/'+rec.id, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ applications }) });
+        message.success('Added');
+        await load();
+      };
+
+      const edit = async (rec)=>{
+        const newCidr = prompt('Edit Network (CIDR or IP):', rec.cidr) || rec.cidr;
+        if (!/^(\d{1,3}\.){3}\d{1,3}(?:\/\d{1,2})?$/.test(newCidr)) return message.warning('Invalid CIDR/IP');
+        const str = prompt('Edit applications as JSON array (name, owner, env, notes):', JSON.stringify(rec.applications || [], null, 2));
+        let apps = rec.applications || [];
+        try { if (str) apps = JSON.parse(str); } catch { return message.warning('Invalid JSON'); }
+        await fetch('/api/mappings/'+rec.id, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ cidr:newCidr, applications:apps }) });
+        message.success('Updated');
+        await load();
+      };
+
+      const del = async (rec)=>{
+        await fetch('/api/mappings/'+rec.id, { method:'DELETE' });
+        message.success('Deleted');
+        await load();
+      };
+
+      const exportJson = async ()=>{
+        const data = await fetch('/api/mappings').then(r=>r.json());
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob); a.download = `network_mappings_${Date.now()}.json`; a.click();
+        URL.revokeObjectURL(a.href);
+      };
+
+      const importJson = async (file)=>{
+        try {
+          const txt = await file.text();
+          const json = JSON.parse(txt);
+          const items = Array.isArray(json.items) ? json.items : [];
+          const existing = await fetch('/api/mappings').then(r=>r.json());
+          for (const x of (existing.items||[])) { await fetch('/api/mappings/'+x.id, { method:'DELETE' }); }
+          for (const it of items) {
+            await fetch('/api/mappings', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ cidr: it.cidr, applications: it.applications || [] }) });
+          }
+          message.success('Imported');
+          await load();
+        } catch { message.error('Import failed'); }
+      };
+
+      const cols = [
+        { title:'Network', dataIndex:'cidr', width:220, render:(v)=><span className="pill">{v}</span> },
+        { title:'Applications', dataIndex:'applications', render:(apps)=>(
+          apps?.length ? apps.map((a,i)=>(
+            <div key={i} style={{ marginBottom:6 }}>
+              <span className="pill">App: {a.name}</span>
+              {a.owner ? <span className="pill">Owner: {a.owner}</span> : null}
+              {a.env ? <span className="pill">Env: {a.env}</span> : null}
+              {a.notes ? <span className="pill" title={a.notes}>Notes</span> : null}
+            </div>
+          )) : <Text type="secondary">—</Text>
+        )},
+        { title:'Actions', key:'act', width:180, render:(_, rec)=>(
+          <Space>
+            <Button onClick={()=>addApp(rec)}>+ App</Button>
+            <Button onClick={()=>edit(rec)}>Edit</Button>
+            <Popconfirm title="Delete?" onConfirm={()=>del(rec)}><Button danger>Delete</Button></Popconfirm>
+          </Space>
+        )}
+      ];
+
+      return (
+        <Space direction="vertical" size="large" style={{ display:'flex', padding:'16px' }}>
+          <Card title="Add Mapping">
+            <Form form={form} layout="vertical" onFinish={add}>
+              <Row gutter={12}>
+                <Col xs={24} md={8}><Form.Item name="cidr" label="Network (CIDR or IP)" rules={[{required:true, message:'Required'}]}><Input placeholder="10.0.0.0/24 or 10.0.0.5"/></Form.Item></Col>
+                <Col xs={24} md={6}><Form.Item name="appName" label="Application" rules={[{required:true, message:'Required'}]}><Input placeholder="CRM / ERP / …"/></Form.Item></Col>
+                <Col xs={24} md={4}><Form.Item name="owner" label="Owner"><Input placeholder="Finance / IT / …"/></Form.Item></Col>
+                <Col xs={24} md={4}><Form.Item name="env" label="Environment"><Input placeholder="Prod / Dev / QA / DR"/></Form.Item></Col>
+                <Col xs={24} md={24}><Form.Item name="notes" label="Notes"><Input placeholder="Any context or constraints"/></Form.Item></Col>
+              </Row>
+              <Space>
+                <Button type="primary" htmlType="submit">Add</Button>
+                <Button onClick={()=>form.resetFields()}>Clear</Button>
+              </Space>
+            </Form>
+          </Card>
+
+          <Card title="Mappings" extra={
+            <Space className="toolbar">
+              <Input placeholder="Search CIDR, App, Owner, Env" value={search} onChange={e=>setSearch(e.target.value)} style={{ width:320 }}/>
+              <Button onClick={exportJson}>Export JSON</Button>
+              <label className="ant-btn" style={{ margin:0 }}>
+                <input className="import-input" type="file" accept="application/json" onChange={e=>{ const f=e.target.files?.[0]; if (f) importJson(f); e.target.value=''; }}/>
+                <span>Import JSON</span>
+              </label>
+            </Space>
+          }>
+            <Table
+              loading={loading}
+              columns={cols}
+              dataSource={filtered}
+              rowKey="id"
+              pagination={{ pageSize: 10 }}
+            />
+          </Card>
+        </Space>
+      );
+    }
+
+    function AppShell() {
+      const [isDark, setIsDark] = useState(false);
+      return (
+        <ConfigProvider theme={{ algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm }}>
+          <Layout style={{ minHeight:'100%' }}>
+            <HeaderNav currentPath={location.pathname} onToggleTheme={()=>setIsDark(v=>!v)} isDark={isDark}/>
+            <Content>
+              <TagsMappingPage/>
+            </Content>
+            <Footer style={{ textAlign:'center' }}>Tags & Mapping • Ant Design UI</Footer>
+          </Layout>
+        </ConfigProvider>
+      );
+    }
+
+    window.addEventListener('error', (e)=>console.error('GlobalError:', e.message));
+    window.addEventListener('unhandledrejection', (e)=>console.error('UnhandledRejection:', e.reason));
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<AppShell />);
   </script>
-  <script src="tags.js"></script>
 </body>
 </html>

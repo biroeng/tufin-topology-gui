@@ -4,8 +4,11 @@
   "description": "Modern GUI for Tufin SecureTrack: topology, tags & mapping, and devices",
   "type": "module",
   "main": "server.js",
-  "scripts": { "start": "node server.js" },
+  "scripts": {
+    "start": "node server.js"
+  },
   "dependencies": {
+    "antd": "^5.28.0",
     "axios": "^1.7.7",
     "body-parser": "^1.20.2",
     "dotenv": "^16.4.5",
