@@ -12,13 +12,20 @@
       <svg width="24" height="24" viewBox="0 0 24 24" class="brand-icon" aria-hidden="true"><circle cx="12" cy="12" r="10"/></svg>
       <span>Tufin Topology</span>
     </div>
+
+    <nav class="main-nav" aria-label="Primary">
+      <a class="nav-link" href="/" data-route="/">Topology</a>
+      <a class="nav-link" href="/tags" data-route="/tags">Tags & Mapping</a>
+      <a class="nav-link" href="#approved-networks">Approved Networks</a>
+    </nav>
+
     <div class="header-actions">
       <button id="darkToggle" class="btn ghost" title="Toggle theme">🌙</button>
-      <a class="btn ghost" href="https://forum.tufin.com/support/kc/rest-api/" target="_blank" rel="noreferrer">Docs ↗</a>
     </div>
   </header>
 
   <main class="app-main">
+    <!-- Form -->
     <section class="panel panel-form">
       <form id="queryForm" novalidate>
         <div class="field">
@@ -42,6 +49,7 @@
       </form>
     </section>
 
+    <!-- Visuals -->
     <section class="panel panel-visual">
       <div class="visual-toolbar">
         <div class="group">
@@ -72,10 +80,12 @@
                   <th>Type</th>
                   <th>Interface</th>
                   <th>Notes</th>
+                  <th>Tags</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody id="devicesTableBody">
-                <tr><td colspan="5" class="muted">Run a query to see devices.</td></tr>
+                <tr><td colspan="7" class="muted">Run a query to see devices.</td></tr>
               </tbody>
             </table>
           </div>
@@ -83,15 +93,88 @@
       </div>
     </section>
 
+    <!-- JSON -->
     <section class="panel panel-json">
-      <div class="panel-title">
-        <h3>Raw Results (JSON)</h3>
-      </div>
+      <div class="panel-title"><h3>Raw Results (JSON)</h3></div>
       <pre id="result" class="code">No results yet.</pre>
+    </section>
+
+    <!-- Approved Networks -->
+    <section class="panel panel-approved" id="approved-networks">
+      <div class="approved-bar">
+        <h3>Approved Networks</h3>
+        <form id="approvedForm" class="approved-form" autocomplete="off">
+          <input type="text" id="approvedInput" placeholder="CIDR or IP (e.g. 10.0.0.0/24 or 10.0.0.5)" />
+          <button type="submit" class="btn">Add</button>
+          <button type="button" id="clearApproved" class="btn ghost">Clear All</button>
+        </form>
+      </div>
+      <div class="approved-list-wrap">
+        <ul id="approvedList" class="approved-list"></ul>
+      </div>
     </section>
   </main>
 
+  <!-- Tag Modal -->
+  <div id="tagModal" class="modal" aria-hidden="true">
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header">
+        <h3 id="modalTitle">Tag Network</h3>
+        <button class="modal-close" title="Close" data-close>✕</button>
+      </div>
+      <form id="tagForm" class="modal-body">
+        <div class="field">
+          <label for="tagCidr">Network (CIDR or IP)</label>
+          <input type="text" id="tagCidr" placeholder="10.0.0.0/24 or 10.0.0.5" required />
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label>Environment</label>
+            <select id="tagEnv"><option value="">—</option></select>
+          </div>
+          <div class="field">
+            <label>Business Unit</label>
+            <select id="tagBU"><option value="">—</option></select>
+          </div>
+          <div class="field">
+            <label>Data Sensitivity</label>
+            <select id="tagData"><option value="">—</option></select>
+          </div>
+          <div class="field">
+            <label>Trust Zone</label>
+            <select id="tagZone"><option value="">—</option></select>
+          </div>
+          <div class="field">
+            <label>Application/Service</label>
+            <select id="tagApp"><option value="">—</option></select>
+          </div>
+          <div class="field">
+            <label>Compliance</label>
+            <select id="tagCompliance"><option value="">—</option></select>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn primary">Save</button>
+          <button type="button" class="btn ghost" data-close>Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    // Highlight active menu item
+    (function setActive() {
+      const here = location.pathname || "/";
+      document.querySelectorAll('.main-nav .nav-link[data-route]').forEach(a => {
+        a.classList.toggle('active', a.getAttribute('data-route') === here);
+      });
+    })();
+  </script>
   <script src="app.js"></script>
 </body>
 </html>
