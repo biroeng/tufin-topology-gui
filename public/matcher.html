@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NAT Policies & Objects</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <style>
+    .tabs { display:flex; gap:8px; border-bottom:1px solid var(--border); padding: 0 8px 8px; }
+    .tab { appearance:none; background:transparent; border:1px solid var(--border); color:var(--text); padding:8px 12px; border-radius:10px; cursor:pointer; }
+    .tab.active { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(70,179,255,.2) inset; }
+    .hidden { display:none; }
+    .grid-2 { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <svg width="24" height="24" viewBox="0 0 24 24" class="brand-icon" aria-hidden="true"><circle cx="12" cy="12" r="10"/></svg>
+      <span>NAT Policies & Objects</span>
+    </div>
+
+    <nav class="main-nav" aria-label="Primary">
+      <a class="nav-link" href="/" data-route="/">Topology</a>
+      <a class="nav-link" href="/tags" data-route="/tags">Tags & Mapping</a>
+      <a class="nav-link active" href="/matcher" data-route="/matcher">NAT</a>
+    </nav>
+
+    <div class="header-actions">
+      <button id="themeToggle" class="btn ghost" title="Toggle theme">🌙</button>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <section class="panel panel-form">
+      <div class="tabs" role="tablist" aria-label="NAT views">
+        <button class="tab active" id="tabRules" aria-controls="viewRules" aria-selected="true">NAT Policies (Rules)</button>
+        <button class="tab" id="tabObjects" aria-controls="viewObjects" aria-selected="false">NAT Objects</button>
+      </div>
+
+      <!-- NAT RULES (bindings) -->
+      <div id="viewRules" role="tabpanel" aria-labelledby="tabRules">
+        <form id="rulesForm" class="grid-2" novalidate>
+          <div class="field">
+            <label for="rulesDevice">Device ID *</label>
+            <input id="rulesDevice" placeholder="e.g., 10" required />
+          </div>
+          <div class="field">
+            <label for="rulesContext">Context (optional)</label>
+            <input id="rulesContext" placeholder="Global MSSP context (integer)" />
+          </div>
+
+          <div class="field">
+            <label for="inputIf">Input interface</label>
+            <input id="inputIf" placeholder='e.g., "any" or interface name'/>
+          </div>
+          <div class="field">
+            <label for="outputIf">Output interface</label>
+            <input id="outputIf" placeholder='e.g., "any" or interface name'/>
+          </div>
+
+          <div class="field">
+            <label for="natStage">NAT Stage</label>
+            <select id="natStage">
+              <option value="">(none)</option>
+              <option value="pre_policy">pre_policy</option>
+              <option value="post_policy">post_policy</option>
+              <option value="both">both</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="natType">NAT Type</label>
+            <select id="natType">
+              <option value="">(none)</option>
+              <option value="vip">vip</option>
+              <option value="reverse_vip">reverse_vip</option>
+            </select>
+          </div>
+
+          <div class="form-actions" style="grid-column:1/-1;">
+            <button type="submit" class="btn primary">Fetch NAT Rules</button>
+            <button type="button" id="rulesClear" class="btn ghost">Clear</button>
+          </div>
+          <div id="rulesHint" class="hint"></div>
+        </form>
+
+        <section class="panel panel-visual" style="margin-top:12px; padding:12px;">
+          <div class="visual-toolbar">
+            <div class="group">
+              <input id="rulesSearch" placeholder="Filter rules (text search)" style="padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--panel-2);color:var(--text);min-width:320px;">
+            </div>
+            <div class="group">
+              <button class="btn ghost" id="rulesCopyJson">Copy JSON</button>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Name / ID</th>
+                  <th>Original (src,dst,svc)</th>
+                  <th>Translated (src,dst,svc)</th>
+                  <th>Interfaces / Stage / Type</th>
+                </tr>
+              </thead>
+              <tbody id="rulesBody">
+                <tr><td colspan="5" class="muted">No results yet.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel panel-json">
+          <div class="panel-title"><h3>Raw Results (JSON)</h3></div>
+          <pre id="rulesRaw" class="code">No results yet.</pre>
+        </section>
+      </div>
+
+      <!-- NAT OBJECTS -->
+      <div id="viewObjects" role="tabpanel" aria-labelledby="tabObjects" class="hidden">
+        <form id="objectsForm" class="grid-2" novalidate>
+          <div class="field">
+            <label for="objDevice">Device ID *</label>
+            <input id="objDevice" placeholder="e.g., 20" required />
+          </div>
+          <div class="field">
+            <label for="objContext">Context (optional)</label>
+            <input id="objContext" placeholder="Global MSSP context (integer)" />
+          </div>
+
+          <div class="field">
+            <label for="objStart">Start (page)</label>
+            <input id="objStart" placeholder="e.g., 0" />
+          </div>
+          <div class="field">
+            <label for="objCount">Count (page size)</label>
+            <input id="objCount" placeholder="e.g., 100" />
+          </div>
+
+          <div class="field">
+            <label for="objTotal">Get Total</label>
+            <select id="objTotal">
+              <option value="">(default false)</option>
+              <option value="true">true</option>
+              <option value="false">false</option>
+            </select>
+          </div>
+
+          <div class="form-actions" style="grid-column:1/-1;">
+            <button type="submit" class="btn primary">Fetch NAT Objects</button>
+            <button type="button" id="objectsClear" class="btn ghost">Clear</button>
+          </div>
+          <div id="objectsHint" class="hint"></div>
+        </form>
+
+        <section class="panel panel-visual" style="margin-top:12px; padding:12px;">
+          <div class="visual-toolbar">
+            <div class="group">
+              <input id="objectsSearch" placeholder="Filter objects (name/type/IP…)" style="padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--panel-2);color:var(--text);min-width:320px;">
+            </div>
+            <div class="group">
+              <button class="btn ghost" id="objectsCopyJson">Copy JSON</button>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Address / Members</th>
+                </tr>
+              </thead>
+              <tbody id="objectsBody">
+                <tr><td colspan="4" class="muted">No results yet.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel panel-json">
+          <div class="panel-title"><h3>Raw Results (JSON)</h3></div>
+          <pre id="objectsRaw" class="code">No results yet.</pre>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <!-- Health Banner -->
+  <div id="tufinHealthBanner" style="display:none; position:fixed; left:16px; right:16px; bottom:16px; z-index:9999;
+    background:#fee2e2; color:#991b1b; border:1px solid #fecaca; border-radius:12px; padding:12px 14px; box-shadow:0 8px 18px rgba(0,0,0,.12);">
+    <strong>Tufin connection is DOWN.</strong>
+    <span id="tufinHealthMsg" style="margin-left:8px; opacity:.85;"></span>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (function setActive() {
+      const here = location.pathname || "/matcher";
+      document.querySelectorAll('.main-nav .nav-link[data-route]').forEach(a => {
+        a.classList.toggle('active', a.getAttribute('data-route') === here);
+      });
+    })();
+  </script>
+  <script src="matcher.js"></script>
+</body>
+</html>

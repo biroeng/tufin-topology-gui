@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tufin Topology Path</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <svg width="24" height="24" viewBox="0 0 24 24" class="brand-icon" aria-hidden="true"><circle cx="12" cy="12" r="10"/></svg>
+      <span>Tufin Topology</span>
+    </div>
+    <div class="header-actions">
+      <button id="darkToggle" class="btn ghost" title="Toggle theme">🌙</button>
+      <a class="btn ghost" href="https://forum.tufin.com/support/kc/rest-api/" target="_blank" rel="noreferrer">Docs ↗</a>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <section class="panel panel-form">
+      <form id="queryForm" novalidate>
+        <div class="field">
+          <label for="source">Source IP</label>
+          <input type="text" id="source" placeholder="10.0.0.1" required/>
+        </div>
+        <div class="field">
+          <label for="destination">Destination IP</label>
+          <input type="text" id="destination" placeholder="10.0.2.5" required/>
+        </div>
+        <div class="field">
+          <label for="service">Service (optional)</label>
+          <input type="text" id="service" placeholder="tcp/80, udp/53, 443, etc."/>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn primary" id="runBtn">Run Query</button>
+          <button type="button" class="btn" id="swapBtn" title="Swap source/destination">Swap</button>
+          <button type="button" class="btn ghost" id="clearBtn">Clear</button>
+        </div>
+        <div id="formHint" class="hint"></div>
+      </form>
+    </section>
+
+    <section class="panel panel-visual">
+      <div class="visual-toolbar">
+        <div class="group">
+          <button class="btn" id="zoomIn">＋</button>
+          <button class="btn" id="zoomOut">－</button>
+          <button class="btn" id="resetZoom">⤾</button>
+        </div>
+        <div class="group">
+          <button class="btn ghost" id="downloadImg">Download PNG</button>
+          <button class="btn ghost" id="copyJson">Copy JSON</button>
+        </div>
+      </div>
+
+      <div class="visual-content">
+        <div id="imageWrapper" class="image-wrapper">
+          <div id="imageOverlay" class="image-overlay">No image yet</div>
+          <img id="topologyImage" alt="Topology Path Image" />
+        </div>
+        <aside class="devices">
+          <h3>Devices on Path</h3>
+          <div class="table-wrap">
+            <table class="table" aria-describedby="devicesTableDesc">
+              <caption id="devicesTableDesc" class="sr-only">Device list extracted from API JSON</caption>
+              <thead>
+                <tr>
+                  <th>Hop</th>
+                  <th>Device</th>
+                  <th>Type</th>
+                  <th>Interface</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody id="devicesTableBody">
+                <tr><td colspan="5" class="muted">Run a query to see devices.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="panel panel-json">
+      <div class="panel-title">
+        <h3>Raw Results (JSON)</h3>
+      </div>
+      <pre id="result" class="code">No results yet.</pre>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>

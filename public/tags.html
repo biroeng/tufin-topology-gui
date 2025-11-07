@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="Cache-Control" content="no-store" />
+  <title>Tags & Network Mapping</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <svg width="24" height="24" viewBox="0 0 24 24" class="brand-icon"><circle cx="12" cy="12" r="10"/></svg>
+      <span>Tags & Network Mapping</span>
+    </div>
+    <nav class="main-nav">
+      <a class="nav-link" href="/" data-route="/">Topology</a>
+      <a class="nav-link active" href="/tags" data-route="/tags">Tags & Mapping</a>
+      <a class="nav-link" href="/devices" data-route="/devices">Devices</a>
+    </nav>
+    <div class="header-actions">
+      <button id="themeToggle" class="btn ghost" title="Toggle theme">🌙</button>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <section class="panel panel-form">
+      <div class="page-head" style="display:flex;justify-content:space-between;align-items:center;">
+        <h2 style="margin:0">Add Mapping</h2>
+        <div style="display:flex;gap:8px;">
+          <button class="btn ghost" id="exportBtn">Export JSON</button>
+          <label class="btn ghost" for="importFile">Import JSON</label>
+          <input id="importFile" type="file" accept="application/json" style="display:none"/>
+        </div>
+      </div>
+      <form id="mapForm" class="grid-3" autocomplete="off" style="margin-top:12px;">
+        <div class="field"><label for="cidr">Network (CIDR or IP)</label><input id="cidr" placeholder="10.0.0.0/24" required/></div>
+        <div class="field"><label for="appName">Application</label><input id="appName" placeholder="CRM / ERP" required/></div>
+        <div class="field"><label for="owner">Owner</label><input id="owner" placeholder="Team or BU"/></div>
+        <div class="field"><label for="env">Environment</label><input id="env" placeholder="Prod / Dev / QA"/></div>
+        <div class="field"><label for="notes">Notes</label><input id="notes" placeholder="Any context"/></div>
+        <div class="form-actions" style="align-self:end;"><button type="submit" class="btn primary">Add</button></div>
+      </form>
+      <div id="formHint" class="hint"></div>
+    </section>
+
+    <section class="panel panel-visual" style="padding:16px;">
+      <div class="visual-toolbar">
+        <input id="search" placeholder="Search CIDR, App, Owner, Env..." style="padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--panel-2);color:var(--text);min-width:320px;">
+        <div class="muted" id="countInfo" style="margin-left:auto;"></div>
+      </div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th style="width:220px;">Network</th><th>Applications</th><th style="width:140px;">Actions</th></tr></thead>
+          <tbody id="mapBody"><tr><td colspan="3" class="muted">No mappings yet.</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <div id="tufinHealthBanner" style="display:none; position:fixed; left:16px; right:16px; bottom:16px; z-index:9999; background:#fee2e2; color:#991b1b; border:1px solid #fecaca; border-radius:12px; padding:12px 14px;">
+    <strong>Tufin connection is DOWN.</strong>
+    <span id="tufinHealthMsg"></span>
+    <button id="healthRetry" class="btn ghost" style="margin-left:12px;">Retry</button>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="health.js"></script>
+  <script src="tags.js"></script>
+</body>
+</html>

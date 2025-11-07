@@ -1,0 +1,32 @@
+{
+  "items": [
+    {
+      "id": "kz0t5004",
+      "cidr": "192.168.60.0/32",
+      "tags": [
+        "Env:Production",
+        "BU:Finance",
+        "DataClassification:Public",
+        "Zone:Internal-Trust",
+        "App:SAP-ERP",
+        "Compliance:PCI-DSS",
+        "Env:Development",
+        "BU:HR",
+        "DataClassification:Internal",
+        "Zone:DMZ",
+        "App:SharePoint",
+        "Compliance:HIPAA"
+      ]
+    },
+    {
+      "id": "thmivrdn",
+      "cidr": "192.168.60.0",
+      "tags": []
+    },
+    {
+      "id": "nf1yhr4r",
+      "cidr": "10.0.0.0/32",
+      "tags": []
+    }
+  ]
+}

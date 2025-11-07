@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="Cache-Control" content="no-store" />
+  <title>Tufin Devices</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <svg width="24" height="24" viewBox="0 0 24 24" class="brand-icon"><circle cx="12" cy="12" r="10"/></svg>
+      <span>Devices</span>
+    </div>
+  <nav class="main-nav">
+      <a class="nav-link" href="/" data-route="/">Topology</a>
+      <a class="nav-link" href="/tags" data-route="/tags">Tags & Mapping</a>
+      <a class="nav-link active" href="/devices" data-route="/devices">Devices</a>
+    </nav>
+    <div class="header-actions">
+      <button id="themeToggle" class="btn ghost">🌙</button>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <section class="panel panel-visual" style="padding:12px;">
+      <div class="visual-toolbar">
+        <div class="group">
+          <input id="search" placeholder="Filter by ID, name, type, IP…" style="padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--panel-2);color:var(--text);min-width:320px;">
+        </div>
+        <div class="group">
+          <button class="btn ghost" id="reload">Reload</button>
+          <button class="btn ghost" id="copyJson">Copy JSON</button>
+        </div>
+        <div class="muted" id="countInfo" style="margin-left:auto;"></div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th><th>Name</th><th>Type</th><th>IP</th><th>Domain/Context</th>
+            </tr>
+          </thead>
+          <tbody id="devBody">
+            <tr><td colspan="5" class="muted">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel panel-json">
+      <div class="panel-title"><h3>Raw JSON</h3></div>
+      <pre id="rawJson" class="code">No results yet.</pre>
+    </section>
+  </main>
+
+  <div id="tufinHealthBanner" style="display:none; position:fixed; left:16px; right:16px; bottom:16px; z-index:9999; background:#fee2e2; color:#991b1b; border:1px solid #fecaca; border-radius:12px; padding:12px 14px;">
+    <strong>Tufin connection is DOWN.</strong>
+    <span id="tufinHealthMsg"></span>
+    <button id="healthRetry" class="btn ghost" style="margin-left:12px;">Retry</button>
+  </div>
+
+  <div id="toast" class="toast"></div>
+  <script src="health.js"></script>
+  <script src="devices.js"></script>
+</body>
+</html>
