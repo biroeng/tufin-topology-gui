@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Metrics Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Ant Design CSS (CSS-only) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5/dist/reset.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5/dist/antd.min.css" />
+
+  <style>
+    html, body { height: 100%; margin: 0; background: #f5f5f5; }
+    .layout { min-height: 100%; display: flex; flex-direction: column; }
+    .header { background: #001529; color: #fff; display: flex; align-items: center; padding: 0 16px; }
+    .brand { color: #1677ff; font-weight: 700; margin-right: 16px; }
+    .nav { display: flex; gap: 12px; margin-left: 8px; }
+    .nav a { color: rgba(255,255,255,0.85); text-decoration: none; padding: 16px 8px; }
+    .nav a.active { color: #fff; border-bottom: 2px solid #1677ff; }
+    .content { padding: 16px; flex: 1; }
+    .footer { text-align: center; padding: 16px; color: rgba(0,0,0,0.45); }
+    .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+    .btn { border: 1px solid #1677ff; background: #1677ff; color: #fff; border-radius: 6px; padding: 6px 12px; cursor: pointer; font-weight: 500; }
+    .btn-secondary { border: 1px solid #d9d9d9; background: #fff; color: #000; border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+    .grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+    @media (min-width: 1100px) { .grid { grid-template-columns: 1fr 1fr; } }
+    .card { background: #fff; border: 1px solid #f0f0f0; border-radius: 8px; padding: 16px; }
+    .card h3 { margin: 0 0 8px 0; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 8px 10px; border-bottom: 1px solid #f0f0f0; font-size: 14px; text-align: left; }
+    th { background: #fafafa; font-weight: 600; }
+    pre { background: #0b1220; color: #e5eef9; padding: 12px; border-radius: 8px; overflow: auto; font-size: 12px; max-height: 320px; }
+    .ok { color: #52c41a; font-weight: 600; }
+    .err { color: #ff4d4f; font-weight: 600; }
+    .muted { color: rgba(0,0,0,0.45); }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <div class="header">
+      <div class="brand">Tufin</div>
+      <nav class="nav" id="top-nav">
+        <a href="/" data-key="topology">Topology</a>
+        <a href="/tags" data-key="tags">Tags & Mapping</a>
+        <a href="/metrics" data-key="metrics" class="active">Metrics</a>
+        <a href="/curl" data-key="curl">Curl Runner</a>
+      </nav>
+    </div>
+
+    <main class="content">
+      <!-- Controls -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="toolbar">
+          <button id="btnFetchNow" class="btn">Fetch Now</button>
+          <button id="btnClear" class="btn-secondary">Clear History (View)</button>
+          <span id="status" class="muted">Idle</span>
+        </div>
+        <div class="muted">“Fetch Now” calls <code>POST /api/db-series/now</code> to pull a new sample. “Clear History” clears the UI only.</div>
+      </div>
+
+      <div class="grid">
+        <section class="card">
+          <h3>Latest Sample</h3>
+          <div><b>Time:</b> <span id="latestTime">—</span></div>
+          <div><b>Status:</b> <span id="latestStatus">—</span></div>
+          <pre id="latestRaw" style="margin-top:8px;">(no data)</pre>
+        </section>
+
+        <section class="card">
+          <h3>History</h3>
+          <table id="history">
+            <thead>
+              <tr><th>Time</th><th>Status</th><th>Summary</th></tr>
+            </thead>
+            <tbody><tr><td colspan="3">Loading...</td></tr></tbody>
+          </table>
+        </section>
+
+        <section class="card">
+          <h3>Latest Curl Output File</h3>
+          <table style="margin-top:10px;width:100%;">
+            <thead><tr><th style="width:70px;">#</th><th>Value</th></tr></thead>
+            <tbody id="curlFileBody"><tr><td colspan="2">(no data)</td></tr></tbody>
+          </table>
+        </section>
+
+        <section class="card">
+          <h3>AKIPS Device List</h3>
+          <table style="margin-top:10px;width:100%;">
+            <thead><tr><th style="width:70px;">#</th><th>Device</th></tr></thead>
+            <tbody id="akipsDevicesBody"><tr><td colspan="2">(no data)</td></tr></tbody>
+          </table>
+        </section>
+      </div>
+    </main>
+
+    <footer class="footer">Metrics • Tufin UI</footer>
+  </div>
+
+  <script>
+    // Elements
+    const latestTime   = document.getElementById("latestTime");
+    const latestStatus = document.getElementById("latestStatus");
+    const latestRaw    = document.getElementById("latestRaw");
+    const historyBody  = document.querySelector("#history tbody");
+    const curlFileBody = document.getElementById("curlFileBody");
+    const devicesBody  = document.getElementById("akipsDevicesBody");
+    const statusEl     = document.getElementById("status");
+    const btnFetchNow  = document.getElementById("btnFetchNow");
+    const btnClear     = document.getElementById("btnClear");
+
+    // State
+    let clearView = false; // when true, UI shows as cleared until next fetch repaints
+
+    function setStatus(txt, color = "#666") {
+      statusEl.textContent = txt;
+      statusEl.style.color = color;
+    }
+
+    // Robust renderers
+    function safeText(v, fallback='') { return (v === undefined || v === null) ? fallback : String(v); }
+    function summarizeItem(i) {
+      if (typeof i?.raw === 'string' && i.raw) return i.raw;
+      if (i?.data !== undefined) return JSON.stringify(i.data);
+      if (i?.error) return i.error;
+      return '';
+    }
+
+    function renderLatest(item) {
+      const ts = item?.ts ? new Date(item.ts).toLocaleString() : '—';
+      const ok = item?.ok === true ? 'OK' : (item?.ok === false ? 'Error' : '—');
+
+      let body =
+        (typeof item?.raw === 'string' && item.raw) ? item.raw :
+        (item?.data !== undefined ? JSON.stringify(item.data, null, 2) :
+        (item?.error || ''));
+
+      if (!body) body = '(no data)';
+
+      latestTime.textContent = ts;
+      latestStatus.textContent = ok;
+      latestStatus.className = item?.ok ? 'ok' : (item?.ok === false ? 'err' : '');
+      latestRaw.textContent = body;
+    }
+
+    function renderHistory(items) {
+      historyBody.innerHTML = '';
+      if (!Array.isArray(items) || !items.length) {
+        historyBody.innerHTML = "<tr><td colspan='3'>No data</td></tr>";
+        return;
+      }
+
+      // newest first
+      items.slice().reverse().forEach((i) => {
+        const ts = i?.ts ? new Date(i.ts).toLocaleString() : '—';
+        const st = i?.ok ? "<span class='ok'>OK</span>"
+                         : (i?.ok === false ? "<span class='err'>ERR</span>" : '—');
+
+        let summary = summarizeItem(i);
+        summary = safeText(summary).slice(0, 100);
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${ts}</td><td>${st}</td><td>${summary}</td>`;
+        historyBody.appendChild(tr);
+      });
+    }
+
+    // Load metrics cache
+    async function loadCache() {
+      if (clearView) return; // keep UI cleared until user fetches or auto-refresh repaints
+      try {
+        const res = await fetch("/api/db-series/cache");
+        const j = await res.json();
+        if (!j.ok) return;
+        const items = j.items || [];
+        renderHistory(items);
+        const last = items[items.length - 1];
+        if (last) renderLatest(last);
+      } catch (e) {
+        console.error("cache error:", e);
+      }
+    }
+
+    // Fetch Now button: POST /api/db-series/now then reload
+    async function fetchNow() {
+      setStatus("Fetching...", "#1677ff");
+      try {
+        await fetch("/api/db-series/now", { method: "POST" });
+        clearView = false; // ensure UI will show data
+        await loadCache();
+        setStatus("Done ✓", "#52c41a");
+      } catch (e) {
+        console.error(e);
+        setStatus("Fetch failed", "#ff4d4f");
+      }
+    }
+
+    // Clear History (View): clears the UI only
+    function clearHistoryView() {
+      clearView = true;
+      latestTime.textContent = '—';
+      latestStatus.textContent = '—';
+      latestStatus.className = '';
+      latestRaw.textContent = '(cleared)';
+      historyBody.innerHTML = "<tr><td colspan='3'>(cleared)</td></tr>";
+      setStatus("History cleared (view only).", "#999");
+    }
+
+    // Load curl output from file
+    async function loadCurlFile() {
+      try {
+        const res = await fetch("/api/curl-output-file");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const text = await res.text();
+        renderCurlFile(text);
+      } catch (e) {
+        renderCurlFile(null);
+      }
+    }
+
+    function renderCurlFile(text) {
+      curlFileBody.innerHTML = "";
+      if (!text || text.startsWith("No curl output")) {
+        curlFileBody.innerHTML = "<tr><td colspan='2'>(empty)</td></tr>";
+        return;
+      }
+
+      let rows = [];
+      try {
+        const parsed = JSON.parse(text);
+        if (Array.isArray(parsed)) {
+          rows = parsed.map((v, i) => [i + 1, JSON.stringify(v)]);
+        } else if (typeof parsed === "object") {
+          rows = Object.entries(parsed);
+        } else {
+          rows = [[1, String(parsed)]];
+        }
+      } catch {
+        rows = text.split(/\r?\n/).map((line, i) => [i + 1, line]);
+      }
+
+      rows.forEach(r => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${r[0]}</td><td>${r[1]}</td>`;
+        curlFileBody.appendChild(tr);
+      });
+    }
+
+    // Load AKIPS devices file
+    async function loadAkipsDevices() {
+      try {
+        const res = await fetch("/api/akips-devices");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const text = await res.text();
+        renderDevices(text);
+      } catch (e) {
+        devicesBody.innerHTML = "<tr><td colspan='2'>(empty)</td></tr>";
+      }
+    }
+
+    function renderDevices(text) {
+      devicesBody.innerHTML = "";
+      if (!text || text.startsWith("No AKIPS")) {
+        devicesBody.innerHTML = "<tr><td colspan='2'>(empty)</td></tr>";
+        return;
+      }
+      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      if (!lines.length) {
+        devicesBody.innerHTML = "<tr><td colspan='2'>(empty)</td></tr>";
+        return;
+      }
+      lines.forEach((line, idx) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${idx + 1}</td><td>${line}</td>`;
+        devicesBody.appendChild(tr);
+      });
+    }
+
+    // Wire up buttons
+    btnFetchNow.addEventListener("click", fetchNow);
+    btnClear.addEventListener("click", clearHistoryView);
+
+    // Auto refresh every 5s (metrics cache + curl file + devices)
+    function tick() {
+      loadCache();
+      loadCurlFile();
+      loadAkipsDevices();
+    }
+    tick();
+    setInterval(tick, 5000);
+  </script>
+</body>
+</html>

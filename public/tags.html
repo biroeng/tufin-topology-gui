@@ -56,28 +56,39 @@
     const { Text } = Typography;
 
     /* Header */
-    function HeaderNav({ currentPath, onToggleTheme, isDark }) {
-      const selectedKey = currentPath === '/tags' ? 'tags' : 'topology';
-      return (
-        <Header style={{ position:'sticky', top:0, zIndex:1000, display:'flex', alignItems:'center' }}>
-          <div style={{ color:'#1677ff', fontWeight:700, marginRight:16 }}>Tufin</div>
-          <Menu
-            theme="dark"
-            mode="horizontal"
-            selectedKeys={[selectedKey]}
-            items={[
-              { key:'topology', label:<a href="/">Topology</a> },
-              { key:'tags', label:<a href="/tags">Tags & Mapping</a> },
-            ]}
-            style={{ flex:1 }}
-          />
-          <Space>
-            <Text style={{ color:'#fff' }}>Dark</Text>
-            <Switch checked={isDark} onChange={onToggleTheme}/>
-          </Space>
-        </Header>
-      );
-    }
+function HeaderNav({ currentPath, onToggleTheme, isDark }) {
+  // Normalize path (strip trailing slash)
+  const path = (currentPath || location.pathname).replace(/\/+$/, '') || '/';
+
+  // Map pathname -> menu key
+  const selectedKey =
+    path === '/' ? 'topology' :
+    path === '/tags' ? 'tags' :
+    path === '/metrics' ? 'metrics' :
+    path === '/curl' ? 'curl' : 'topology';
+
+  return (
+    <Header style={{ position:'sticky', top:0, zIndex:1000, display:'flex', alignItems:'center' }}>
+      <div style={{ color:'#1677ff', fontWeight:700, marginRight:16 }}>Tufin</div>
+      <Menu
+        theme="dark"
+        mode="horizontal"
+        selectedKeys={[selectedKey]}
+        items={[
+          { key:'topology', label:<a href="/">Topology</a> },
+          { key:'tags', label:<a href="/tags">Tags & Mapping</a> },
+          { key:'metrics', label:<a href="/metrics">Metrics</a> },
+          { key:'curl', label:<a href="/curl">Curl Runner</a> },
+        ]}
+        style={{ flex:1 }}
+      />
+      <Space>
+        <Text style={{ color:'#fff' }}>Dark</Text>
+        <Switch checked={isDark} onChange={onToggleTheme}/>
+      </Space>
+    </Header>
+  );
+}
 
     function TagsMappingPage() {
       const [form] = Form.useForm();

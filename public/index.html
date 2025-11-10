@@ -2,482 +2,642 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Tufin Topology (Ant Design)</title>
+  <title>Tufin Topology Explorer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Ant Design CSS -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5/dist/reset.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5/dist/antd.min.css" />
-
-  <!-- React + ReactDOM + Babel -->
-  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.development.js" crossorigin></script>
-  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.26.4/babel.min.js"></script>
-
-  <!-- Day.js + plugins (must load BEFORE AntD JS) -->
-  <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/advancedFormat.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/customParseFormat.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/localeData.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/weekOfYear.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/weekYear.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/quarterOfYear.js"></script>
-  <script>
-    dayjs.extend(dayjs_plugin_advancedFormat);
-    dayjs.extend(dayjs_plugin_customParseFormat);
-    dayjs.extend(dayjs_plugin_localeData);
-    dayjs.extend(dayjs_plugin_weekOfYear);
-    dayjs.extend(dayjs_plugin_weekYear);
-    dayjs.extend(dayjs_plugin_quarterOfYear);
-  </script>
-
-  <!-- Ant Design UMD -->
-  <script src="https://cdn.jsdelivr.net/npm/antd@5/dist/antd.min.js"></script>
-
   <style>
-    html, body, #root { height: 100%; margin: 0; }
-    .topology-image-wrap {
-      position: relative; border: 1px solid #f0f0f0; border-radius: 8px;
-      min-height: 360px; overflow: hidden;
-      background: repeating-conic-gradient(from 0deg, #0000 0deg 90deg, rgba(0,0,0,.02) 90deg 180deg);
+    /* -------- THEME TOKENS -------- */
+    :root {
+      /* Light */
+      --bg: #f7f9fc;
+      --surface: #ffffff;
+      --surface-2: #f4f6fa;
+      --text: #0f172a;
+      --muted: #5b6b84;
+      --border: #e5e9f2;
+      --brand: #1769ff;
+      --brand-2: #2a85ff;
+      --ok: #2bbb6a;
+      --err: #ef4444;
+      --warn: #f59e0b;
+      --chip: #f1f5ff;
+      --chip-br: #d7e3ff;
+      --code-bg: #0e1221;
+      --shadow: 0 8px 26px rgba(8, 15, 35, .08);
+      --shadow-sm: 0 6px 16px rgba(8, 15, 35, .06);
+      --ring: 0 0 0 3px rgba(23, 105, 255, .18);
     }
-    .topology-image-wrap img {
-      display: block; max-width: 100%; user-select: none; cursor: grab;
-      transform-origin: center center;
+    .theme-dark {
+      --bg: #0c111b;
+      --surface: #101727;
+      --surface-2: #0e1524;
+      --text: #e8eef8;
+      --muted: #9eb1cc;
+      --border: #1b2640;
+      --brand: #6ea8fe;
+      --brand-2: #4d86ff;
+      --ok: #52c41a;
+      --err: #ff4d4f;
+      --warn: #faad14;
+      --chip: #182440;
+      --chip-br: #29406d;
+      --code-bg: #0b1220;
+      --shadow: 0 10px 28px rgba(0,0,0,.35);
+      --shadow-sm: 0 8px 20px rgba(0,0,0,.25);
+      --ring: 0 0 0 3px rgba(110,168,254,.22);
     }
-    .overlay-center {
-      position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#999; font-weight:600;
+
+    /* Respect OS preference on first load if no saved choice */
+    @media (prefers-color-scheme: dark) {
+      :root:not(.force-light):not(.force-dark) {
+        color-scheme: dark;
+      }
     }
-    pre.json {
-      margin: 0; padding: 12px; background: #0b1220; color: #e5eef9;
-      border-radius: 8px; overflow:auto; font-size: 12px; line-height: 1.4;
+
+    /* -------- BASE -------- */
+    * { box-sizing: border-box }
+    html, body { height: 100%; margin: 0 }
+    body {
+      background:
+        radial-gradient(1400px 800px at 20% -10%, var(--surface-2), transparent 55%),
+        radial-gradient(1200px 900px at 120% -20%, var(--surface-2), transparent 55%),
+        var(--bg);
+      color: var(--text);
+      font: 14px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
     }
-    .device-tags .ant-tag { margin-bottom: 4px; }
-    .approved-list .ant-list-item { align-items: flex-start; }
-    .toolbar-gap > * { margin-right: 8px; }
+    .layout { min-height: 100%; display: flex; flex-direction: column }
+    .container { width: 100%; max-width: 1280px; margin: 0 auto; padding: 0 16px }
+
+    /* Header */
+    .header {
+      position: sticky; top: 0; z-index: 20;
+      background: linear-gradient(180deg, var(--surface) 0%, color-mix(in oklab, var(--surface), transparent 8%) 100%);
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+    }
+    .brand { display: flex; align-items: center; gap: 10px; padding: 12px 0 }
+    .logo {
+      width: 30px; height: 30px; border-radius: 9px;
+      background: linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%);
+      display: grid; place-items: center; box-shadow: 0 0 0 4px color-mix(in oklab, var(--brand), transparent 86%);
+    }
+    .logo svg { width: 18px; height: 18px; fill: #0b0f16 }
+    .brand-name { font-weight: 800; letter-spacing: .3px }
+    .nav { display: flex; gap: 8px; margin-left: auto }
+    .nav a {
+      color: color-mix(in oklab, var(--text), transparent 20%);
+      text-decoration: none; padding: 8px 10px; border-radius: 10px; border: 1px solid transparent;
+    }
+    .nav a:hover { background: var(--surface-2); border-color: var(--border) }
+    .nav a.active { color: var(--text); border-color: var(--border); background: var(--surface-2) }
+
+    .theme-toggle {
+      display: inline-flex; align-items: center; gap: 8px;
+      margin-left: 8px; padding: 8px 10px; border-radius: 10px;
+      border: 1px solid var(--border); background: var(--surface-2); cursor: pointer;
+    }
+
+    /* Sections & cards */
+    .content { padding: 16px 0; flex: 1 }
+    .section {
+      background: linear-gradient(180deg, var(--surface) 0%, color-mix(in oklab, var(--surface-2), transparent 15%) 100%);
+      border: 1px solid var(--border);
+      border-radius: 14px; box-shadow: var(--shadow); padding: 16px;
+    }
+    h3 { margin: 0 0 12px 0; font-size: 16px; letter-spacing: .2px }
+
+    /* Grid: image left, devices right */
+    .grid {
+      display: grid; grid-template-columns: 1fr; gap: 16px;
+    }
+    @media (min-width: 1080px) {
+      .grid { grid-template-columns: 1.15fr .85fr }
+    }
+
+    /* Form */
+    .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px }
+    @media (max-width: 780px) { .row { grid-template-columns: 1fr } }
+    .field { display: flex; flex-direction: column; gap: 6px }
+    .field input {
+      background: var(--surface-2); color: var(--text);
+      border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; outline: none;
+      transition: border .2s, box-shadow .2s;
+    }
+    .field input:focus { border-color: var(--brand-2); box-shadow: var(--ring) }
+    .toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 10px }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      border: 1px solid color-mix(in oklab, var(--brand-2), black 15%);
+      background: linear-gradient(180deg, var(--brand-2) 0%, var(--brand) 100%); color: white;
+      border-radius: 10px; padding: 9px 14px; cursor: pointer; font-weight: 700; letter-spacing: .2px;
+      box-shadow: 0 6px 18px color-mix(in oklab, var(--brand), transparent 70%);
+      transition: transform .08s ease, box-shadow .2s ease;
+    }
+    .btn:hover { box-shadow: 0 10px 26px color-mix(in oklab, var(--brand), transparent 60%) }
+    .btn:active { transform: translateY(1px) }
+    .btn-ghost {
+      background: var(--surface); color: var(--text); border: 1px solid var(--border);
+    }
+    .muted { color: var(--muted) }
+    .hint { color: var(--muted); font-size: 12px; margin-top: 6px }
+
+    /* Image area with skeleton */
+    .img-wrap {
+      position: relative; min-height: 340px;
+      border: 1px dashed var(--border); border-radius: 12px;
+      background: var(--surface-2); display: grid; place-items: center; overflow: hidden;
+    }
+    #topologyImage { max-width: 100%; height: auto; display: none }
+    .skeleton {
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.08), rgba(255,255,255,0)), linear-gradient(180deg, var(--surface-2), var(--surface));
+      background-size: 200% 100%, auto; animation: shimmer 1.2s infinite;
+    }
+    @keyframes shimmer { 0% { background-position: -200% 0 } 100% { background-position: 200% 0 } }
+    .img-empty { color: var(--muted) }
+
+    /* Table */
+    .table-wrap { overflow: auto; border-radius: 12px; border: 1px solid var(--border) }
+    table { width: 100%; border-collapse: collapse }
+    thead th {
+      position: sticky; top: 0; background: color-mix(in oklab, var(--surface-2), black 4%);
+      color: var(--text); border-bottom: 1px solid var(--border); padding: 10px; text-align: left;
+    }
+    tbody td { padding: 10px; border-bottom: 1px solid var(--border) }
+    tbody tr:nth-child(odd) { background: color-mix(in oklab, var(--surface), white 2%) }
+    tbody tr:nth-child(even) { background: color-mix(in oklab, var(--surface), black 2%) }
+    tbody tr:hover { background: color-mix(in oklab, var(--surface-2), white 4%) }
+    .pill { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 999px;
+      background: var(--chip); border: 1px solid var(--chip-br); color: color-mix(in oklab, var(--text), transparent 20%);
+      font-size: 12px; margin: 2px 4px 0 0 }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; background: color-mix(in oklab, var(--ok), transparent 90%); color: var(--ok); border: 1px solid color-mix(in oklab, var(--ok), transparent 60%); font-size: 12px; margin-left: 6px }
+    .status-up { color: var(--ok); font-weight: 700 }
+    .status-down { color: var(--err); font-weight: 700 }
+    .status-test { color: var(--warn); font-weight: 700 }
+
+    /* Device status panel */
+    .status-card { margin-top: 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); padding: 12px }
+
+    /* Code / JSON */
+    pre { background: var(--code-bg); color: #d9ecff; border: 1px solid #0f2347; padding: 12px; border-radius: 12px; overflow: auto; font-size: 12px; min-height: 260px }
+    code, pre code { font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace }
+
+    /* Icons for device types */
+    .dev-ic { width: 16px; height: 16px; vertical-align: middle; margin-right: 6px }
+    .dev-router { color: var(--brand) }
+    .dev-switch { color: #b37feb }
+
+    /* Focus visibility */
+    :where(button, a, input):focus-visible { outline: none; box-shadow: var(--ring) }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      .skeleton { animation: none }
+      .btn, .btn:hover { transition: none }
+    }
   </style>
 </head>
+<body class="layout">
+  <!-- HEADER -->
+  <header class="header">
+    <div class="container" style="display:flex;align-items:center;gap:12px;">
+      <div class="brand">
+        <div class="logo">
+          <svg viewBox="0 0 24 24"><path d="M12 2l3.5 6H20l-4 4 1.5 6L12 15l-5.5 3 1.5-6-4-4h4.5L12 2z"/></svg>
+        </div>
+        <div class="brand-name">Tufin</div>
+      </div>
+      <nav class="nav">
+        <a href="/" class="active">Topology</a>
+        <a href="/tags">Tags & Mapping</a>
+        <a href="/metrics">Metrics</a>
+        <a href="/curl">Curl Runner</a>
+      </nav>
+      <button id="themeToggle" class="theme-toggle" title="Toggle dark/light">
+        <svg id="sunIcon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+          <path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.8 1.42-1.42zM1 13h3v-2H1v2zm10 10h2v-3h-2v3zM20 13h3v-2h-3v2zM17.24 4.84l1.8-1.79 1.41 1.41-1.79 1.8-1.42-1.42zM12 6a6 6 0 100 12 6 6 0 000-12zm7 13.66l1.41 1.41-1.79 1.79-1.41-1.41 1.79-1.79zM4.24 19.66l-1.8 1.79 1.41 1.41 1.8-1.79-1.41-1.41z"/>
+        </svg>
+        <svg id="moonIcon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true" style="display:none">
+          <path d="M21.64 13A9 9 0 1111 2.36 7 7 0 0021.64 13z"/>
+        </svg>
+        <span id="themeLabel" class="muted" style="font-size:12px">Light</span>
+      </button>
+    </div>
+  </header>
 
-<body>
-  <div id="root"></div>
+  <!-- MAIN -->
+  <main class="content">
+    <div class="container">
+      <!-- Query card -->
+      <section class="section" style="margin-bottom:16px;">
+        <h3>Query Path</h3>
+        <div class="row">
+          <label class="field">
+            <span class="muted" style="font-size:12px">Source (src)</span>
+            <input id="src" placeholder="e.g., 192.168.60.0" />
+          </label>
+          <label class="field">
+            <span class="muted" style="font-size:12px">Destination (dst)</span>
+            <input id="dst" placeholder="e.g., 172.16.30.0" />
+          </label>
+          <label class="field">
+            <span class="muted" style="font-size:12px">Service</span>
+            <input id="svc" placeholder="e.g., any or tcp:80 or Facebook" />
+          </label>
+        </div>
+        <div class="toolbar">
+          <button class="btn" id="btnRun">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+            Run
+          </button>
+          <button class="btn btn-ghost" id="btnAnalyze" title="Parse nodes & edges from the latest topology JSON">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M3 12h18M12 3v18"/></svg>
+            Analyze Topology
+          </button>
+          <span class="muted" id="status">Idle</span>
+        </div>
+        <div class="hint">Image uses <code>/securetrack/api/topology/path_image</code>; JSON uses <code>/securetrack/api/topology/path</code> via server proxies.</div>
+      </section>
 
-  <script type="text/babel">
-    const { useState, useEffect, useRef } = React;
-    const {
-      ConfigProvider, theme, Layout, Menu, Space, Typography, Form, Input, Button, Card,
-      Row, Col, message, Modal, Select, Tag, Badge, Table, List, Popconfirm, Tooltip,
-      Collapse, Switch
-    } = antd;
+      <!-- Image + Devices -->
+      <div class="grid">
+        <!-- Left: Image -->
+        <section class="section">
+          <h3>Topology Image</h3>
+          <div class="img-wrap">
+            <div class="skeleton" id="imgSkeleton" aria-hidden="true"></div>
+            <img id="topologyImage" alt="Topology" />
+            <div class="img-empty" id="imgEmpty">Enter a query and click <b>Run</b> to render the path.</div>
+          </div>
+        </section>
 
-    const { Header, Content, Footer } = Layout;
-    const { Text } = Typography;
+        <!-- Right: Devices table + status -->
+        <section class="section">
+          <h3>Devices on Path</h3>
+          <div id="devicesEmpty" class="muted" style="padding:10px 0;">No results yet</div>
+          <div class="table-wrap" id="devicesTableWrap" style="display:none;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Hop</th>
+                  <th>Device</th>
+                  <th>Type</th>
+                  <th>Interface</th>
+                  <th>Notes</th>
+                  <th>Tags</th>
+                  <th style="min-width:220px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="devicesBody"></tbody>
+            </table>
+          </div>
 
-    /* ===== Header ===== */
-    function HeaderNav({ currentPath, onToggleTheme, isDark }) {
-      const selectedKey = currentPath === '/tags' ? 'tags' : 'topology';
-      return (
-        <Header style={{ position:'sticky', top:0, zIndex:1000, display:'flex', alignItems:'center' }}>
-          <div style={{ color:'#1677ff', fontWeight:700, marginRight:16 }}>Tufin</div>
-          <Menu
-            theme="dark"
-            mode="horizontal"
-            selectedKeys={[selectedKey]}
-            items={[
-              { key:'topology', label:<a href="/">Topology</a> },
-              { key:'tags', label:<a href="/tags">Tags & Mapping</a> },
-              { key:'approved', label:<a href="#approved">Approved Networks</a> },
-            ]}
-            style={{ flex:1 }}
-          />
-          <Space>
-            <Text style={{ color:'#fff' }}>Dark</Text>
-            <Switch checked={isDark} onChange={onToggleTheme}/>
-          </Space>
-        </Header>
-      );
+          <!-- Device Status Panel -->
+          <div id="device-status-panel" class="status-card" style="display:none;"></div>
+        </section>
+      </div>
+
+      <!-- Parsed Topology -->
+      <section id="parsedSection" class="section" style="margin-top:16px; display:none;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <h3>Parsed Topology</h3>
+          <span class="muted" id="parseStats">—</span>
+          <div style="margin-left:auto;display:flex;gap:8px;">
+            <button class="btn btn-ghost" id="btnExportNodes">Export Nodes CSV</button>
+            <button class="btn btn-ghost" id="btnExportEdges">Export Edges CSV</button>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Device</th><th>Type</th><th>First Hop</th><th>Interfaces (seen)</th></tr></thead>
+              <tbody id="nodesBody"><tr><td colspan="4" class="muted">No data</td></tr></tbody>
+            </table>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>#</th><th>From (hop)</th><th>To (hop)</th></tr></thead>
+              <tbody id="edgesBody"><tr><td colspan="3" class="muted">No data</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Raw JSON -->
+      <section class="section" style="margin-top:16px;">
+        <h3>Raw JSON</h3>
+        <pre id="rawJson">(no data)</pre>
+      </section>
+    </div>
+  </main>
+
+  <footer class="container" style="text-align:center;color:var(--muted);padding:18px;">Topology • Tufin UI</footer>
+
+  <script>
+    /* ---------- Theme toggle ---------- */
+    (function initTheme(){
+      const saved = localStorage.getItem("tufin.theme");
+      const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const body = document.body;
+      const sun = document.getElementById("sunIcon");
+      const moon = document.getElementById("moonIcon");
+      const label = document.getElementById("themeLabel");
+      const btn = document.getElementById("themeToggle");
+
+      function apply(mode){
+        if(mode === "dark"){ body.classList.add("theme-dark"); label.textContent = "Dark"; moon.style.display="inline"; sun.style.display="none"; }
+        else { body.classList.remove("theme-dark"); label.textContent = "Light"; sun.style.display="inline"; moon.style.display="none"; }
+      }
+      const initial = saved || (prefersDark ? "dark" : "light");
+      apply(initial);
+
+      btn.addEventListener("click", () => {
+        const next = body.classList.contains("theme-dark") ? "light" : "dark";
+        localStorage.setItem("tufin.theme", next);
+        apply(next);
+      });
+    })();
+
+    /* ---------- App logic ---------- */
+    const $ = (id) => document.getElementById(id);
+
+    const srcEl = $("src"), dstEl = $("dst"), svcEl = $("svc");
+    const btnRun = $("btnRun"), btnAnalyze = $("btnAnalyze");
+    const statusEl = $("status");
+
+    const imgEl = $("topologyImage"), imgSkeleton = $("imgSkeleton"), imgEmpty = $("imgEmpty");
+
+    const devicesEmpty = $("devicesEmpty");
+    const devicesTableWrap = $("devicesTableWrap");
+    const devicesBody = $("devicesBody");
+    const deviceStatusPanel = $("device-status-panel");
+
+    const parsedSection = $("parsedSection");
+    const parseStats = $("parseStats");
+    const nodesBody = $("nodesBody");
+    const edgesBody = $("edgesBody");
+    const btnExportNodes = $("btnExportNodes");
+    const btnExportEdges = $("btnExportEdges");
+
+    let lastDevices = [];
+    let lastPathData = null;
+
+    function setStatus(text, color = "var(--muted)") { statusEl.textContent = text; statusEl.style.color = color; }
+    function escapeHtml(s){ return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
+    function isRouterOrSwitch(type){ const t = String(type || "").toLowerCase(); return t === "router" || t === "switch"; }
+
+    function startImageLoading(){ imgSkeleton.style.display = "block"; imgEl.style.display = "none"; imgEmpty.style.display = "none"; }
+    function showImage(){ imgSkeleton.style.display = "none"; imgEl.style.display = "block"; imgEmpty.style.display = "none"; }
+    function showEmptyImage(){ imgSkeleton.style.display = "none"; imgEl.style.display = "none"; imgEmpty.style.display = "block"; }
+
+    function deviceIcon(type) {
+      const t = String(type || "").toLowerCase();
+      if (t === "router") {
+        return `<svg class="dev-ic dev-router" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M4 8h16v8H4z"></path>
+          <circle cx="8" cy="12" r="1.25" fill="#fff"></circle>
+          <circle cx="12" cy="12" r="1.25" fill="#fff"></circle>
+          <circle cx="16" cy="12" r="1.25" fill="#fff"></circle>
+          <path d="M7 6h10v2H7zM6 16h12v2H6z"></path>
+        </svg>`;
+      }
+      if (t === "switch") {
+        return `<svg class="dev-ic dev-switch" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <rect x="3" y="7" width="18" height="10" rx="2" ry="2"></rect>
+          <circle cx="8" cy="12" r="1.25" fill="currentColor"></circle>
+          <circle cx="12" cy="12" r="1.25" fill="currentColor"></circle>
+          <circle cx="16" cy="12" r="1.25" fill="currentColor"></circle>
+        </svg>`;
+      }
+      return "";
     }
 
-    /* ===== Taxonomy Hook ===== */
-    function useTaxonomy() {
-      const [tax, setTax] = useState(null);
-      useEffect(() => {
-        fetch('/api/tag-taxonomy').then(r=>r.json()).then(setTax).catch(()=>setTax(null));
-      }, []);
-      const opts = (arr)=> (arr||[]).map(v => ({ label:v, value:v }));
-      return {
-        tax,
-        envOpts: opts(tax?.environment),
-        buOpts: opts(tax?.businessUnit),
-        dataOpts: opts(tax?.dataSensitivity),
-        zoneOpts: opts(tax?.trustZone),
-        appOpts: opts(tax?.application),
-        compOpts: opts(tax?.compliance),
-      };
+    function renderDevicesTable(rows){
+      lastDevices = Array.isArray(rows) ? rows : [];
+      devicesBody.innerHTML = "";
+      deviceStatusPanel.style.display = "none";
+      deviceStatusPanel.innerHTML = "";
+
+      if(!rows || !rows.length){
+        devicesTableWrap.style.display = "none";
+        devicesEmpty.style.display = "block";
+        devicesEmpty.textContent = "No devices found";
+        return;
+      }
+      devicesEmpty.style.display = "none";
+      devicesTableWrap.style.display = "block";
+
+      rows.forEach((r, i) => {
+        const tagsHtml = (r.tags || []).map(t => `<span class="pill">${escapeHtml(t)}</span>`).join(" ");
+        const approved = r.approved ? `<span class="badge" title="Matched approved network(s)">Approved</span>` : "";
+
+        const actions = [];
+        actions.push(`<button class="btn btn-ghost" onclick="tagNetworkByIp('${escapeHtml(r.ip || "")}')">Tag Network</button>`);
+        if (isRouterOrSwitch(r.type)) {
+          actions.push(`<button class="btn" onclick="showDeviceStatus('${escapeHtml(r.device)}')">Check Device Status</button>`);
+        }
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${escapeHtml(r.hop ?? i + 1)}</td>
+          <td><span style="display:inline-flex;align-items:center;">${deviceIcon(r.type)} ${escapeHtml(r.device || "")} ${approved}</span></td>
+          <td>${escapeHtml(r.type || "")}</td>
+          <td>${escapeHtml(r.iface || "")}</td>
+          <td>${escapeHtml(r.notes || "")}</td>
+          <td>${tagsHtml || "<span class='muted'>—</span>"}</td>
+          <td style="display:flex;gap:8px;flex-wrap:wrap;">${actions.join(" ")}</td>
+        `;
+        devicesBody.appendChild(tr);
+      });
     }
 
-    /* ===== Tag Modal ===== */
-    function TagModal({ open, onCancel, onSaved, prefillCidr, prefillTags }) {
-      const { envOpts, buOpts, dataOpts, zoneOpts, appOpts, compOpts } = useTaxonomy();
-      const [form] = Form.useForm();
-
-      useEffect(()=>{
-        form.resetFields();
-        form.setFieldsValue({ cidr: prefillCidr || '' });
-        (prefillTags||[]).forEach(tag=>{
-          const [k,v] = String(tag).split(':');
-          const map = { Env:'env', BU:'bu', DataClassification:'data', Zone:'zone', App:'app', Service:'app', Compliance:'comp' };
-          const field = map[k];
-          if (field) form.setFieldValue(field, v);
+    async function tagNetworkByIp(ip){
+      if(!ip) return alert("No IP to tag.");
+      const tags = prompt(`Enter comma-separated tags for ${ip}`, "Env:Production, Zone:DMZ");
+      if(tags === null) return;
+      try{
+        const res = await fetch("/api/approved-networks/tag-by-ip", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ip, tags: tags.split(",").map(s => s.trim()).filter(Boolean) })
         });
-      }, [open]);
+        if(!res.ok) throw new Error(`HTTP ${res.status}`);
+        alert("Tags saved.");
+      } catch (e) {
+        alert("Failed to save tags: " + e.message);
+      }
+    }
 
-      const onFinish = async (vals) => {
-        const cidr = (vals.cidr||'').trim();
-        const tags = [];
-        if (vals.env) tags.push(`Env:${vals.env}`);
-        if (vals.bu) tags.push(`BU:${vals.bu}`);
-        if (vals.data) tags.push(`DataClassification:${vals.data}`);
-        if (vals.zone) tags.push(`Zone:${vals.zone}`);
-        if (vals.app) tags.push(`App:${vals.app}`);
-        if (vals.comp) tags.push(`Compliance:${vals.comp}`);
-        try {
-          if (/^(\d+\.){3}\d+$/.test(cidr)) {
-            await fetch('/api/approved-networks/tag-by-ip', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ ip: cidr, tags }) });
-          } else {
-            await fetch('/api/approved-networks', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ cidr, tags }) });
-          }
-          message.success('Saved');
-          onSaved?.();
-        } catch(e) {
-          message.error('Failed to save tags');
+    async function showDeviceStatus(deviceName){
+      deviceStatusPanel.style.display = "block";
+      deviceStatusPanel.innerHTML = `
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">
+          <span class="pill">Device Status</span>
+          <strong>${escapeHtml(deviceName)}</strong>
+        </div>
+        <div class="muted">Querying IF-MIB.ifAdminStatus …</div>
+      `;
+      try{
+        const res = await fetch("/api/device-status", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ device: deviceName })
+        });
+        const j = await res.json();
+        if(!res.ok || !j.ok){
+          deviceStatusPanel.innerHTML = `
+            <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">
+              <span class="pill">Device Status</span>
+              <strong>${escapeHtml(deviceName)}</strong>
+            </div>
+            <div style="color:var(--err); margin-bottom:8px">${escapeHtml((j && j.error) || "Request failed")}</div>
+            <details><summary>Raw output</summary><pre>${escapeHtml((j && j.stdout) || "")}</pre></details>
+          `;
+          return;
         }
-      };
-
-      return (
-        <Modal title="Tag Network" open={open} onCancel={onCancel} onOk={()=>form.submit()}>
-          <Form form={form} layout="vertical" onFinish={onFinish}>
-            <Form.Item label="Network (CIDR or IP)" name="cidr" rules={[{ required:true, message:'Enter CIDR or IP' }]}>
-              <Input placeholder="10.0.0.0/24 or 10.0.0.5" />
-            </Form.Item>
-            <Row gutter={12}>
-              <Col span={12}><Form.Item label="Environment" name="env"><Select allowClear options={envOpts} /></Form.Item></Col>
-              <Col span={12}><Form.Item label="Business Unit" name="bu"><Select allowClear options={buOpts} /></Form.Item></Col>
-              <Col span={12}><Form.Item label="Data Sensitivity" name="data"><Select allowClear options={dataOpts} /></Form.Item></Col>
-              <Col span={12}><Form.Item label="Trust Zone" name="zone"><Select allowClear options={zoneOpts} /></Form.Item></Col>
-              <Col span={12}><Form.Item label="Application/Service" name="app"><Select allowClear options={appOpts} /></Form.Item></Col>
-              <Col span={12}><Form.Item label="Compliance" name="comp"><Select allowClear options={compOpts} /></Form.Item></Col>
-            </Row>
-          </Form>
-        </Modal>
-      );
-    }
-
-    /* ===== Approved Networks Card ===== */
-    function ApprovedNetworksCard({ onChanged }) {
-      const [items, setItems] = useState([]);
-      const [adding, setAdding] = useState('');
-      const [openTag, setOpenTag] = useState(false);
-      const [prefill, setPrefill] = useState({ cidr:'', tags:[] });
-
-      const load = async () => {
-        const data = await fetch('/api/approved-networks').then(r=>r.json());
-        setItems(data.items || []);
-      };
-      useEffect(()=>{ load(); }, []);
-
-      const addQuick = async () => {
-        const cidr = adding.trim();
-        if (!cidr) return;
-        try {
-          await fetch('/api/approved-networks', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ cidr }) });
-          setAdding(''); await load(); onChanged?.();
-          message.success('Added');
-        } catch { message.error('Failed to add'); }
-      };
-
-      const remove = async (id) => {
-        await fetch('/api/approved-networks/'+id, { method:'DELETE' });
-        await load(); onChanged?.();
-        message.success('Deleted');
-      };
-
-      const edit = (entry) => {
-        setPrefill({ cidr: entry.cidr, tags: entry.tags || [] });
-        setOpenTag(true);
-      };
-
-      return (
-        <>
-          <Card id="approved" title="Approved Networks" extra={
-            <Space>
-              <Input value={adding} onChange={(e)=>setAdding(e.target.value)} placeholder="CIDR or IP" style={{ width:220 }}/>
-              <Button type="primary" onClick={addQuick}>Add</Button>
-              <Button onClick={()=>{ setPrefill({cidr:'', tags:[]}); setOpenTag(true); }}>Tag with Details</Button>
-            </Space>
-          }>
-            <List
-              className="approved-list"
-              itemLayout="horizontal"
-              dataSource={items}
-              locale={{ emptyText: 'No approved networks yet' }}
-              renderItem={(it)=>(
-                <List.Item
-                  actions={[
-                    <a key="edit" onClick={()=>edit(it)}>Edit</a>,
-                    <Popconfirm key="del" title="Delete?" onConfirm={()=>remove(it.id)}><a>Delete</a></Popconfirm>
-                  ]}
-                >
-                  <List.Item.Meta
-                    title={<Space wrap>
-                      <Text code>{it.cidr}</Text>
-                      {(it.tags||[]).map(t => <Tag key={t} color="geekblue">{t}</Tag>)}
-                    </Space>}
-                    description={(!it.tags || !it.tags.length) ? <Text type="secondary">No tags</Text> : null}
-                  />
-                </List.Item>
-              )}
-            />
-          </Card>
-
-          <TagModal
-            open={openTag}
-            onCancel={()=>setOpenTag(false)}
-            prefillCidr={prefill.cidr}
-            prefillTags={prefill.tags}
-            onSaved={async ()=>{ setOpenTag(false); await load(); onChanged?.(); }}
-          />
-        </>
-      );
-    }
-
-    /* ===== Devices Table ===== */
-    function DevicesTable({ rows, onTag }) {
-      const cols = [
-        { title:'Hop', dataIndex:'hop', width:70 },
-        { title:'Device', dataIndex:'device', render:(v, rec)=>(
-          <Space>
-            <Text>{v}</Text>
-            {rec.approved && <Badge status="success" text="Approved" />}
-          </Space>
-        )},
-        { title:'Type', dataIndex:'type', width:160 },
-        { title:'Interface', dataIndex:'iface', width:160 },
-        { title:'Notes', dataIndex:'notes' },
-        { title:'Tags', dataIndex:'tags', render:(ts)=>(<Space wrap className="device-tags">{(ts||[]).map(t=><Tag key={t}>{t}</Tag>) || <Text type="secondary">—</Text>}</Space>)},
-        { title:'Actions', key:'act', width:140, render:(_, rec)=>(
-          <Button type="link" onClick={()=>onTag(rec)}>Tag Network</Button>
-        )}
-      ];
-      return <Table size="small" columns={cols} dataSource={rows} rowKey={(r,i)=>String(i)} pagination={{ pageSize:8 }} />;
-    }
-
-    /* ===== Topology Page ===== */
-    function TopologyPage() {
-      const [form] = Form.useForm();
-      const [loading, setLoading] = useState(false);
-      const [json, setJson] = useState(null);
-      const [devices, setDevices] = useState([]);
-      const [imgSrc, setImgSrc] = useState('');
-      const [imgReady, setImgReady] = useState(false);
-
-      const [tagOpen, setTagOpen] = useState(false);
-      const [tagPrefill, setTagPrefill] = useState({ cidr:'', tags:[] });
-
-      // zoom/pan
-      const imgRef = useRef(null);
-      const [scale, setScale] = useState(1);
-      const [offset, setOffset] = useState({ x:0, y:0 });
-      const dragRef = useRef({ dragging:false, sx:0, sy:0, ox:0, oy:0 });
-
-      const doQuery = async (values) => {
-        const { source, destination, service } = values;
-        setLoading(true); setImgReady(false);
-        setScale(1); setOffset({x:0,y:0});
-
-        const imgURL = `/api/topology-image?source=${encodeURIComponent(source)}&destination=${encodeURIComponent(destination)}&service=${encodeURIComponent(service||'')}`;
-        setImgSrc(imgURL);
-
-        try {
-          const r = await fetch('/api/topology-path-with-devices', {
-            method:'POST', headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({ source, destination, service })
-          });
-          const payload = await r.json();
-          if (!r.ok) throw new Error(payload?.details || 'API error');
-          setJson(payload.data || {});
-          setDevices(payload.devices || []);
-        } catch(e) {
-          message.error(e.message || 'Query failed');
-          setJson({ error: e.message || 'Query failed' });
-          setDevices([]);
-        } finally {
-          setLoading(false);
+        const rows = Array.isArray(j.rows) ? j.rows : [];
+        if(!rows.length){
+          deviceStatusPanel.innerHTML = `
+            <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">
+              <span class="pill">Device Status</span>
+              <strong>${escapeHtml(deviceName)}</strong>
+            </div>
+            <div class="muted">No IF-MIB.ifAdminStatus entries found.</div>
+            <details><summary>Raw</summary><pre>${escapeHtml(j.raw || "")}</pre></details>
+          `;
+          return;
         }
-      };
-
-      const onSubmit = ()=>form.validateFields().then(doQuery);
-      const swap = ()=>{
-        const s = form.getFieldValue('source');
-        const d = form.getFieldValue('destination');
-        form.setFieldsValue({ source:d, destination:s });
-      };
-
-      const wheelZoom = (e)=>{
-        e.preventDefault();
-        const delta = e.deltaY < 0 ? 0.1 : -0.1;
-        setScale(s => Math.max(0.4, Math.min(4, s + delta)));
-      };
-      const mDown = (e)=>{
-        dragRef.current = { dragging:true, sx:e.clientX, sy:e.clientY, ox:offset.x, oy:offset.y };
-        if (imgRef.current) imgRef.current.style.cursor = 'grabbing';
-      };
-      const mUp = ()=>{
-        dragRef.current.dragging = false;
-        if (imgRef.current) imgRef.current.style.cursor = 'grab';
-      };
-      const mMove = (e)=>{
-        if (!dragRef.current.dragging) return;
-        const dx = e.clientX - dragRef.current.sx;
-        const dy = e.clientY - dragRef.current.sy;
-        setOffset({ x: dragRef.current.ox + dx, y: dragRef.current.oy + dy });
-      };
-
-      const onTagRow = (rec)=>{
-        const ip = (rec.ip || '').trim();
-        setTagPrefill({ cidr: ip ? `${ip}/32` : '', tags: rec.tags || [] });
-        setTagOpen(true);
-      };
-
-      // Refresh devices after tags saved using current form values
-      const refreshDevicesFromForm = async ()=>{
-        const vals = form.getFieldsValue();
-        if (!vals?.source || !vals?.destination) return;
-        try {
-          const r = await fetch('/api/topology-path-with-devices', {
-            method:'POST', headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({ source: vals.source, destination: vals.destination, service: vals.service })
-          });
-          const payload = await r.json();
-          if (r.ok) setDevices(payload.devices || []);
-        } catch {}
-      };
-
-      return (
-        <Space direction="vertical" size="large" style={{ display:'flex', padding:'16px' }}>
-          <Card title="Topology Query" extra={
-            <Space className="toolbar-gap">
-              <Button onClick={swap}>Swap</Button>
-              <Button onClick={()=>{ form.resetFields(); setImgSrc(''); setJson(null); setDevices([]); }}>Clear</Button>
-            </Space>
-          }>
-            <Form
-              form={form}
-              layout="inline"
-              onFinish={doQuery}
-              initialValues={{ source:'', destination:'', service:'' }}
-            >
-              <Form.Item name="source" label="Source" rules={[{required:true, message:'Required'}]}>
-                <Input placeholder="10.0.0.1" style={{ width:220 }}/>
-              </Form.Item>
-              <Form.Item name="destination" label="Destination" rules={[{required:true, message:'Required'}]}>
-                <Input placeholder="10.0.2.5" style={{ width:220 }}/>
-              </Form.Item>
-              <Form.Item name="service" label="Service">
-                <Input placeholder="tcp/80, 443, udp/53…" style={{ width:220 }}/>
-              </Form.Item>
-              <Form.Item>
-                <Button type="primary" loading={loading} onClick={onSubmit}>Run Query</Button>
-              </Form.Item>
-            </Form>
-          </Card>
-
-          <Row gutter={16}>
-            <Col xs={24} lg={14}>
-              <Card
-                title="Topology Image"
-                extra={
-                  <Space>
-                    <Tooltip title="Zoom In"><Button onClick={()=>setScale(s=>Math.min(4,s+0.15))}>＋</Button></Tooltip>
-                    <Tooltip title="Zoom Out"><Button onClick={()=>setScale(s=>Math.max(0.4,s-0.15))}>－</Button></Tooltip>
-                    <Tooltip title="Reset View"><Button onClick={()=>{ setScale(1); setOffset({x:0,y:0}); }}>⤾</Button></Tooltip>
-                    <Button onClick={()=>{
-                      if (!imgSrc) return;
-                      const a=document.createElement('a'); a.href=imgSrc; a.download=`topology_${Date.now()}.png`; a.click();
-                    }}>Download</Button>
-                  </Space>
-                }
-              >
-                <div className="topology-image-wrap"
-                    onWheel={wheelZoom}
-                    onMouseDown={mDown}
-                    onMouseUp={mUp}
-                    onMouseMove={mMove}>
-                  {!imgSrc && <div className="overlay-center">No image yet</div>}
-                  {!!imgSrc && (
-                    <>
-                      {!imgReady && <div className="overlay-center">Loading image…</div>}
-                      <img
-                        ref={imgRef}
-                        src={imgSrc}
-                        style={{ display:'block', transform:`translate(${offset.x}px, ${offset.y}px) scale(${scale})` }}
-                        onLoad={()=>setImgReady(true)}
-                        onError={()=>{ setImgReady(false); message.warning('Image not available for this query'); }}
-                        alt="Topology"
-                      />
-                    </>
-                  )}
-                </div>
-              </Card>
-            </Col>
-            <Col xs={24} lg={10}>
-              <Card title="Devices on Path">
-                <DevicesTable rows={devices} onTag={onTagRow}/>
-              </Card>
-            </Col>
-          </Row>
-
-          <Collapse items={[
-            { key:'json', label:'Raw Results (JSON)', children:<pre className="json">{json ? JSON.stringify(json, null, 2) : 'No results yet.'}</pre> }
-          ]} />
-
-          <ApprovedNetworksCard onChanged={refreshDevicesFromForm}/>
-
-          <TagModal
-            open={tagOpen}
-            onCancel={()=>setTagOpen(false)}
-            prefillCidr={tagPrefill.cidr}
-            prefillTags={tagPrefill.tags}
-            onSaved={async ()=>{
-              setTagOpen(false);
-              message.success('Tags saved');
-              await refreshDevicesFromForm();
-            }}
-          />
-        </Space>
-      );
+        const body = rows.map(r=>{
+          let cls = "status-test", label = r.statusText || "";
+          const code = Number(r.statusCode);
+          if(code === 1){ cls = "status-up"; label = "up"; }
+          else if(code === 2){ cls = "status-down"; label = "down"; }
+          else if(code === 3){ cls = "status-test"; label = "testing"; }
+          return `<tr><td>${escapeHtml(r.ifIndex)}</td><td><span class="${cls}">${escapeHtml(label)}</span></td><td><code>${escapeHtml(r.raw || "")}</code></td></tr>`;
+        }).join("");
+        deviceStatusPanel.innerHTML = `
+          <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">
+            <span class="pill">Device Status</span>
+            <strong>${escapeHtml(deviceName)}</strong>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th style="width:120px;">ifIndex</th><th style="width:140px;">Admin Status</th><th>Raw</th></tr></thead>
+              <tbody>${body}</tbody>
+            </table>
+          </div>
+          <details style="margin-top:8px;"><summary>Full raw output</summary><pre>${escapeHtml(j.raw || "")}</pre></details>
+        `;
+      }catch(e){
+        deviceStatusPanel.innerHTML = `
+          <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">
+            <span class="pill">Device Status</span>
+            <strong>${escapeHtml(deviceName)}</strong>
+          </div>
+          <div style="color:var(--err)">${escapeHtml(e.message)}</div>
+        `;
+      }
     }
 
-    /* ===== App Shell ===== */
-    function AppShell() {
-      const [isDark, setIsDark] = useState(false);
-      return (
-        <ConfigProvider theme={{ algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm }}>
-          <Layout style={{ minHeight:'100%' }}>
-            <HeaderNav currentPath={location.pathname} onToggleTheme={()=>setIsDark(v=>!v)} isDark={isDark}/>
-            <Content>
-              <TopologyPage/>
-            </Content>
-            <Footer style={{ textAlign:'center' }}>Tufin Topology • Ant Design UI</Footer>
-          </Layout>
-        </ConfigProvider>
-      );
+    function analyzeTopology(){
+      if(!lastDevices.length){ alert("Run a query first so we have topology JSON to analyze."); return; }
+      // Build nodes & edges
+      const map = new Map();
+      lastDevices.forEach(d => {
+        const name = String(d.device || "").trim();
+        if(!name) return;
+        if(!map.has(name)) map.set(name, { device: name, type: (d.type || ""), firstHop: (d.hop || Number.MAX_SAFE_INTEGER), ifaces: new Set() });
+        const rec = map.get(name);
+        rec.firstHop = Math.min(rec.firstHop, Number(d.hop || Number.MAX_SAFE_INTEGER));
+        if(d.iface) rec.ifaces.add(String(d.iface));
+        if(!rec.type && d.type) rec.type = d.type;
+      });
+      const nodes = Array.from(map.values()).sort((a,b)=>a.firstHop - b.firstHop);
+
+      const ordered = lastDevices.slice().sort((a,b)=>(Number(a.hop || 0) - Number(b.hop || 0)));
+      const edges = [];
+      for(let i=0;i<ordered.length-1;i++){
+        if(ordered[i]?.device && ordered[i+1]?.device){
+          edges.push({ n: i+1, from: `${ordered[i].device} (${ordered[i].hop})`, to: `${ordered[i+1].device} (${ordered[i+1].hop})` });
+        }
+      }
+
+      parsedSection.style.display = "block";
+      parseStats.textContent = `Nodes: ${nodes.length} • Edges: ${edges.length}`;
+
+      nodesBody.innerHTML = nodes.length
+        ? nodes.map(n=>`<tr><td>${escapeHtml(n.device)}</td><td>${escapeHtml(n.type)}</td><td>${escapeHtml(n.firstHop)}</td><td>${escapeHtml(Array.from(n.ifaces).join(", ")||"—")}</td></tr>`).join("")
+        : `<tr><td colspan="4" class="muted">No data</td></tr>`;
+
+      edgesBody.innerHTML = edges.length
+        ? edges.map(e=>`<tr><td>${e.n}</td><td>${escapeHtml(e.from)}</td><td>${escapeHtml(e.to)}</td></tr>`).join("")
+        : `<tr><td colspan="3" class="muted">No data</td></tr>`;
+
+      // CSV exports
+      btnExportNodes.onclick = () => exportCsv("topology_nodes.csv", [["device","type","first_hop","interfaces"], ...nodes.map(n=>[n.device, n.type, n.firstHop, Array.from(n.ifaces).join("; ")])]);
+      btnExportEdges.onclick = () => exportCsv("topology_edges.csv", [["#","from","to"], ...edges.map(e=>[e.n, e.from, e.to])]);
     }
 
-    // Basic global error surfacing
-    window.addEventListener('error', (e)=>console.error('GlobalError:', e.message));
-    window.addEventListener('unhandledrejection', (e)=>console.error('UnhandledRejection:', e.reason));
+    function exportCsv(filename, rows){
+      const csv = rows.map(r => r.map(v => {
+        const s = String(v ?? "");
+        return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+      }).join(",")).join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = filename; a.click();
+      URL.revokeObjectURL(url);
+    }
 
-    ReactDOM.createRoot(document.getElementById('root')).render(<AppShell />);
+    async function runQuery(){
+      const src = srcEl.value.trim();
+      const dst = dstEl.value.trim();
+      const svc = (svcEl.value.trim() || "any");
+      if(!src || !dst){ alert("Please provide both Source and Destination."); return; }
+
+      // reset
+      deviceStatusPanel.style.display = "none";
+      deviceStatusPanel.innerHTML = "";
+      parsedSection.style.display = "none";
+
+      // Image
+      setStatus("Loading image…", "var(--brand)");
+      startImageLoading();
+      const imgUrl = `/api/topology-image?src=${encodeURIComponent(src)}&dst=${encodeURIComponent(dst)}&service=${encodeURIComponent(svc)}`;
+      imgEl.onload  = () => { showImage(); setStatus("Image loaded ✓", "var(--ok)"); };
+      imgEl.onerror = () => { showEmptyImage(); setStatus("Image error", "var(--err)"); };
+      imgEl.src = imgUrl;
+
+      // JSON + devices
+      setStatus("Fetching JSON…", "var(--brand)");
+      try{
+        const res = await fetch("/api/topology-path-with-devices", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ source: src, destination: dst, service: svc })
+        });
+        const j = await res.json();
+        if(!res.ok) throw new Error(j?.error || `HTTP ${res.status}`);
+
+        lastPathData = j.data || null;
+        $("rawJson").textContent = JSON.stringify(j.data, null, 2);
+        renderDevicesTable(Array.isArray(j.devices) ? j.devices : []);
+        setStatus("Done ✓", "var(--ok)");
+      } catch (e) {
+        lastPathData = null;
+        $("rawJson").textContent = `(error) ${e.message}`;
+        devicesTableWrap.style.display = "none";
+        devicesEmpty.style.display = "block";
+        devicesEmpty.innerHTML = `<span style="color:var(--err)">${escapeHtml(e.message)}</span>`;
+        setStatus("Failed", "var(--err)");
+      }
+    }
+
+    // Wire up
+    btnRun.addEventListener("click", runQuery);
+    btnAnalyze.addEventListener("click", analyzeTopology);
   </script>
 </body>
 </html>

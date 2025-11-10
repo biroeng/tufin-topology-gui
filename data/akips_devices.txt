@@ -1,0 +1,4 @@
+Arista720XP
+IOS-XE-17
+tos-rtr1
+tos-rtr2

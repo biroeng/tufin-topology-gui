@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Curl Runner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5/dist/reset.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5/dist/antd.min.css" />
+
+  <style>
+    html, body { height: 100%; margin: 0; background: #f5f5f5; }
+    .layout { min-height: 100%; display: flex; flex-direction: column; }
+    .header { background: #001529; color: #fff; display: flex; align-items: center; padding: 0 16px; }
+    .brand { color: #1677ff; font-weight: 700; margin-right: 16px; }
+    .nav { display: flex; gap: 12px; margin-left: 8px; }
+    .nav a { color: rgba(255,255,255,0.85); text-decoration: none; padding: 16px 8px; }
+    .nav a.active { color: #fff; border-bottom: 2px solid #1677ff; }
+    .content { padding: 16px; flex: 1; }
+    .footer { text-align: center; padding: 16px; color: rgba(0,0,0,0.45); }
+    .card { background: #fff; border: 1px solid #f0f0f0; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+    .cmd { background: #111827; color: #93c5fd; border-radius: 6px; padding: 8px 10px; font-family: monospace; overflow-x: auto; }
+    pre { background: #0b1220; color: #e5eef9; padding: 12px; border-radius: 8px; font-size: 12px; overflow: auto; max-height: 400px; white-space: pre-wrap; }
+    .btn { border: 1px solid #1677ff; background: #1677ff; color: #fff; border-radius: 6px; padding: 6px 12px; cursor: pointer; font-weight: 500; }
+    .btn-secondary { border-color: #d9d9d9; background: #fff; color: #000; }
+    .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <div class="header">
+      <div class="brand">Tufin</div>
+      <nav class="nav" id="top-nav">
+        <a href="/" data-key="topology">Topology</a>
+        <a href="/tags" data-key="tags">Tags & Mapping</a>
+        <a href="/metrics" data-key="metrics">Metrics</a>
+        <a href="/curl" data-key="curl" class="active">Curl Runner</a>
+      </nav>
+    </div>
+
+    <main class="content">
+      <!-- 🟢 FIRST: Run Curl Devices -->
+      <div class="card">
+        <h3>Run AKIPS Device Curl</h3>
+        <div class="toolbar">
+          <button id="runDevices" class="btn">Run Devices Curl</button>
+          <span id="statusDevices" style="color:#555;">Idle</span>
+        </div>
+        <div style="margin-bottom:8px;">Command executed on server:</div>
+        <div class="cmd">curl -sk "https://10.100.200.20/api-db?username=api-ro;password=verysafe;cmds=mget+device+*"</div>
+        <pre id="stdoutDevices">(no output yet)</pre>
+      </div>
+
+      <!-- 🔵 SECOND: Run Standard Curl -->
+      <div class="card">
+        <h3>Run AKIPS Metrics Curl</h3>
+        <div class="toolbar">
+          <button id="run" class="btn">Run Now</button>
+          <span id="status" style="color:#555;">Idle</span>
+        </div>
+        <div style="margin-bottom:8px;">Command executed on server:</div>
+        <div class="cmd">curl -sk "https://10.100.200.20/api-db?username=api-ro;password=verysafe;cmds=series+avg+time+last5m+gauge"</div>
+        <pre id="stdout">(no output yet)</pre>
+      </div>
+    </main>
+
+    <footer class="footer">Curl Runner • Tufin UI</footer>
+  </div>
+
+  <script>
+    const runBtn = document.getElementById("run");
+    const runDevicesBtn = document.getElementById("runDevices");
+    const stdoutEl = document.getElementById("stdout");
+    const stdoutDevicesEl = document.getElementById("stdoutDevices");
+    const statusEl = document.getElementById("status");
+    const statusDevicesEl = document.getElementById("statusDevices");
+
+    async function runCurl() {
+      setStatus(statusEl, "Running...", "#1677ff");
+      try {
+        const res = await fetch("/api/run-curl", { method: "POST" });
+        const j = await res.json();
+        stdoutEl.textContent = j.stdout || "";
+        setStatus(statusEl, "Done ✓", "#52c41a");
+      } catch (e) {
+        stdoutEl.textContent = e.message;
+        setStatus(statusEl, "Error", "#ff4d4f");
+      }
+    }
+
+    async function runCurlDevices() {
+      setStatus(statusDevicesEl, "Running...", "#1677ff");
+      try {
+        const res = await fetch("/api/run-curl-devices", { method: "POST" });
+        const j = await res.json();
+        stdoutDevicesEl.textContent = j.stdout || "";
+        setStatus(statusDevicesEl, "Done ✓", "#52c41a");
+      } catch (e) {
+        stdoutDevicesEl.textContent = e.message;
+        setStatus(statusDevicesEl, "Error", "#ff4d4f");
+      }
+    }
+
+    function setStatus(el, text, color="#555") {
+      el.textContent = text;
+      el.style.color = color;
+    }
+
+    runBtn.addEventListener("click", runCurl);
+    runDevicesBtn.addEventListener("click", runCurlDevices);
+  </script>
+</body>
+</html>
